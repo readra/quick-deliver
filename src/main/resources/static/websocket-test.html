@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Quick Deliver WebSocket Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .panel {
+            border: 1px solid #ccc;
+            padding: 15px;
+            border-radius: 5px;
+        }
+        h2 {
+            margin-top: 0;
+            color: #333;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        button.disconnect {
+            background-color: #f44336;
+        }
+        button.disconnect:hover {
+            background-color: #da190b;
+        }
+        #messages {
+            border: 1px solid #ddd;
+            height: 300px;
+            overflow-y: scroll;
+            padding: 10px;
+            background-color: #f9f9f9;
+            margin-top: 10px;
+        }
+        .message {
+            padding: 5px;
+            margin: 5px 0;
+            border-left: 3px solid #4CAF50;
+            background-color: white;
+        }
+        .message.error {
+            border-left-color: #f44336;
+        }
+        input {
+            width: calc(100% - 22px);
+            padding: 10px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            text-align: center;
+            font-weight: bold;
+        }
+        .status.connected {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .status.disconnected {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <h1>🚀 Quick Deliver WebSocket Test</h1>
+    
+    <div class="status" id="status">
+        <span id="statusText">Disconnected</span>
+    </div>
+
+    <div class="container">
+        <div class="panel">
+            <h2>연결 제어</h2>
+            <input type="text" id="riderId" placeholder="Rider ID (예: RDR-TEST001)" value="RDR-TEST001">
+            <br>
+            <button onclick="connect()">연결</button>
+            <button onclick="disconnect()" class="disconnect">연결 해제</button>
+        </div>
+
+        <div class="panel">
+            <h2>라이더 위치 전송</h2>
+            <input type="number" id="latitude" placeholder="위도" value="37.5665" step="0.0001">
+            <input type="number" id="longitude" placeholder="경도" value="126.9780" step="0.0001">
+            <button onclick="sendLocation()">위치 전송</button>
+        </div>
+
+        <div class="panel">
+            <h2>배송 상태 전송</h2>
+            <input type="text" id="deliveryId" placeholder="Delivery ID" value="DEL-TEST001">
+            <select id="deliveryStatus">
+                <option value="PENDING">대기</option>
+                <option value="ASSIGNED">배정됨</option>
+                <option value="PICKING_UP">픽업중</option>
+                <option value="IN_TRANSIT">배송중</option>
+                <option value="DELIVERED">완료</option>
+            </select>
+            <button onclick="sendDeliveryStatus()">상태 전송</button>
+        </div>
+
+        <div class="panel">
+            <h2>구독 관리</h2>
+            <button onclick="subscribeRiderUpdates()">라이더 업데이트 구독</button>
+            <button onclick="subscribeDeliveryUpdates()">배송 업데이트 구독</button>
+            <button onclick="subscribePersonalQueue()">개인 큐 구독</button>
+        </div>
+    </div>
+
+    <div class="panel" style="margin-top: 20px;">
+        <h2>수신 메시지</h2>
+        <button onclick="clearMessages()">메시지 지우기</button>
+        <div id="messages"></div>
+    </div>
+
+    <script>
+        let stompClient = null;
+        let currentRiderId = null;
+
+        function setConnected(connected) {
+            const status = document.getElementById('status');
+            const statusText = document.getElementById('statusText');
+            
+            if (connected) {
+                status.className = 'status connected';
+                statusText.textContent = 'Connected';
+            } else {
+                status.className = 'status disconnected';
+                statusText.textContent = 'Disconnected';
+            }
+        }
+
+        function connect() {
+            currentRiderId = document.getElementById('riderId').value;
+            const socket = new SockJS('/ws');
+            stompClient = Stomp.over(socket);
+
+            stompClient.connect({}, function (frame) {
+                setConnected(true);
+                showMessage('연결 성공: ' + frame, false);
+                
+                // 라이더 연결 알림
+                stompClient.send("/app/rider/connect", {}, JSON.stringify({
+                    riderId: currentRiderId
+                }));
+            }, function(error) {
+                showMessage('연결 실패: ' + error, true);
+                setConnected(false);
+            });
+        }
+
+        function disconnect() {
+            if (stompClient !== null) {
+                stompClient.disconnect();
+            }
+            setConnected(false);
+            showMessage('연결 해제됨', false);
+        }
+
+        function sendLocation() {
+            if (stompClient && stompClient.connected) {
+                const location = {
+                    riderId: currentRiderId,
+                    latitude: parseFloat(document.getElementById('latitude').value),
+                    longitude: parseFloat(document.getElementById('longitude').value),
+                    timestamp: new Date().getTime()
+                };
+                
+                stompClient.send("/app/rider/location", {}, JSON.stringify(location));
+                showMessage('위치 전송: ' + JSON.stringify(location), false);
+            } else {
+                alert('먼저 연결하세요!');
+            }
+        }
+
+        function sendDeliveryStatus() {
+            if (stompClient && stompClient.connected) {
+                const status = {
+                    deliveryId: document.getElementById('deliveryId').value,
+                    status: document.getElementById('deliveryStatus').value,
+                    riderId: currentRiderId,
+                    timestamp: new Date().getTime()
+                };
+                
+                stompClient.send("/app/delivery/status", {}, JSON.stringify(status));
+                showMessage('배송 상태 전송: ' + JSON.stringify(status), false);
+            } else {
+                alert('먼저 연결하세요!');
+            }
+        }
+
+        function subscribeRiderUpdates() {
+            if (stompClient && stompClient.connected) {
+                stompClient.subscribe('/topic/monitoring/riders', function (message) {
+                    showMessage('라이더 업데이트: ' + message.body, false);
+                });
+                showMessage('라이더 업데이트 구독 시작', false);
+            } else {
+                alert('먼저 연결하세요!');
+            }
+        }
+
+        function subscribeDeliveryUpdates() {
+            if (stompClient && stompClient.connected) {
+                stompClient.subscribe('/topic/monitoring/deliveries', function (message) {
+                    showMessage('배송 업데이트: ' + message.body, false);
+                });
+                showMessage('배송 업데이트 구독 시작', false);
+            } else {
+                alert('먼저 연결하세요!');
+            }
+        }
+
+        function subscribePersonalQueue() {
+            if (stompClient && stompClient.connected) {
+                stompClient.subscribe('/user/' + currentRiderId + '/queue/connection', function (message) {
+                    showMessage('개인 메시지 (connection): ' + message.body, false);
+                });
+                
+                stompClient.subscribe('/user/' + currentRiderId + '/queue/urgent', function (message) {
+                    showMessage('긴급 메시지: ' + message.body, true);
+                });
+                
+                showMessage('개인 큐 구독 시작', false);
+            } else {
+                alert('먼저 연결하세요!');
+            }
+        }
+
+        function showMessage(message, isError) {
+            const messages = document.getElementById('messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message' + (isError ? ' error' : '');
+            messageDiv.textContent = new Date().toLocaleTimeString() + ' - ' + message;
+            messages.appendChild(messageDiv);
+            messages.scrollTop = messages.scrollHeight;
+        }
+
+        function clearMessages() {
+            document.getElementById('messages').innerHTML = '';
+        }
+
+        // 페이지 언로드 시 연결 해제
+        window.addEventListener('beforeunload', function() {
+            if (stompClient !== null) {
+                stompClient.disconnect();
+            }
+        });
+    </script>
+</body>
+</html>

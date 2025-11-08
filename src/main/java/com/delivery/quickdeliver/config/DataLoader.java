@@ -4,18 +4,22 @@ import com.delivery.quickdeliver.domain.entity.Address;
 import com.delivery.quickdeliver.domain.entity.Delivery;
 import com.delivery.quickdeliver.domain.entity.Merchant;
 import com.delivery.quickdeliver.domain.entity.Rider;
+import com.delivery.quickdeliver.domain.entity.User;
 import com.delivery.quickdeliver.domain.enums.DeliveryStatus;
 import com.delivery.quickdeliver.domain.enums.Priority;
 import com.delivery.quickdeliver.domain.enums.RiderStatus;
+import com.delivery.quickdeliver.domain.enums.UserRole;
 import com.delivery.quickdeliver.domain.enums.VehicleType;
 import com.delivery.quickdeliver.repository.DeliveryRepository;
 import com.delivery.quickdeliver.repository.RiderRepository;
+import com.delivery.quickdeliver.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -28,7 +32,9 @@ public class DataLoader {
     @Bean
     @Profile("!test")
     public CommandLineRunner loadData(RiderRepository riderRepository, 
-                                     DeliveryRepository deliveryRepository) {
+                                     DeliveryRepository deliveryRepository,
+                                     UserRepository userRepository,
+                                     PasswordEncoder passwordEncoder) {
         return args -> {
             if (riderRepository.count() > 0) {
                 log.info("Data already loaded. Skipping...");
@@ -36,6 +42,30 @@ public class DataLoader {
             }
 
             log.info("Loading initial test data...");
+
+            // 테스트 사용자 생성
+            User admin = User.builder()
+                    .username("admin")
+                    .password(passwordEncoder.encode("admin123"))
+                    .name("관리자")
+                    .email("admin@quickdeliver.com")
+                    .phoneNumber("010-0000-0000")
+                    .role(UserRole.ADMIN)
+                    .enabled(true)
+                    .build();
+
+            User backoffice = User.builder()
+                    .username("backoffice")
+                    .password(passwordEncoder.encode("backoffice123"))
+                    .name("백오피스")
+                    .email("backoffice@quickdeliver.com")
+                    .phoneNumber("010-1111-1111")
+                    .role(UserRole.BACKOFFICE)
+                    .enabled(true)
+                    .build();
+
+            userRepository.save(admin);
+            userRepository.save(backoffice);
 
             // 테스트 라이더 생성
             Rider rider1 = Rider.builder()
@@ -86,6 +116,32 @@ public class DataLoader {
             riderRepository.save(rider1);
             riderRepository.save(rider2);
             riderRepository.save(rider3);
+
+            // 라이더 사용자 계정 생성
+            User riderUser1 = User.builder()
+                    .username("rider1")
+                    .password(passwordEncoder.encode("rider123"))
+                    .name("김배달")
+                    .email("rider1@quickdeliver.com")
+                    .phoneNumber("010-1234-5678")
+                    .role(UserRole.RIDER)
+                    .enabled(true)
+                    .rider(rider1)
+                    .build();
+
+            User riderUser2 = User.builder()
+                    .username("rider2")
+                    .password(passwordEncoder.encode("rider123"))
+                    .name("이퀵")
+                    .email("rider2@quickdeliver.com")
+                    .phoneNumber("010-2345-6789")
+                    .role(UserRole.RIDER)
+                    .enabled(true)
+                    .rider(rider2)
+                    .build();
+
+            userRepository.save(riderUser1);
+            userRepository.save(riderUser2);
 
             // 테스트 배송 생성
             Delivery delivery1 = Delivery.builder()
@@ -152,8 +208,15 @@ public class DataLoader {
             deliveryRepository.save(delivery2);
 
             log.info("Test data loaded successfully!");
-            log.info("Created {} riders and {} deliveries", 
-                    riderRepository.count(), deliveryRepository.count());
+            log.info("Created {} users, {} riders and {} deliveries", 
+                    userRepository.count(), riderRepository.count(), deliveryRepository.count());
+            log.info("=".repeat(50));
+            log.info("Test Accounts:");
+            log.info("Admin: username=admin, password=admin123");
+            log.info("BackOffice: username=backoffice, password=backoffice123");
+            log.info("Rider1: username=rider1, password=rider123");
+            log.info("Rider2: username=rider2, password=rider123");
+            log.info("=".repeat(50));
         };
     }
 }
