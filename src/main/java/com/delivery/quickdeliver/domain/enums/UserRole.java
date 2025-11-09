@@ -1,5 +1,8 @@
 package com.delivery.quickdeliver.domain.enums;
 
+import lombok.Getter;
+
+@Getter
 public enum UserRole {
     ADMIN("관리자"),
     BACKOFFICE("백오피스"),
@@ -12,7 +15,4 @@ public enum UserRole {
         this.description = description;
     }
 
-    public String getDescription() {
-        return description;
-    }
 }

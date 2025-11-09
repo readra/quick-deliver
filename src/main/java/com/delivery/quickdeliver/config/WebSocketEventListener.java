@@ -9,6 +9,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.socket.messaging.SessionConnectedEvent;
 import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 
+import java.util.Optional;
+
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -28,14 +30,18 @@ public class WebSocketEventListener {
     public void handleWebSocketDisconnectListener(SessionDisconnectEvent event) {
         StompHeaderAccessor headerAccessor = StompHeaderAccessor.wrap(event.getMessage());
         String sessionId = headerAccessor.getSessionId();
-        String username = (String) headerAccessor.getSessionAttributes().get("username");
 
-        if (username != null) {
-            log.info("User {} disconnected. Session ID: {}", username, sessionId);
-            
-            // 연결 해제 알림 브로드캐스트
-            messagingTemplate.convertAndSend("/topic/monitoring/disconnect", 
-                    "User " + username + " disconnected");
-        }
+        // Optional을 사용한 Null 안전 처리
+        Optional.ofNullable(headerAccessor.getSessionAttributes())
+                .map(attrs -> attrs.get("username"))
+                .map(String.class::cast)
+                .ifPresentOrElse(
+                    username -> {
+                        log.info("User {} disconnected. Session ID: {}", username, sessionId);
+                        messagingTemplate.convertAndSend("/topic/monitoring/disconnect", 
+                                "User " + username + " disconnected");
+                    },
+                    () -> log.info("Anonymous user disconnected. Session ID: {}", sessionId)
+                );
     }
 }

@@ -6,8 +6,6 @@ import com.delivery.quickdeliver.dto.response.ApiResponse;
 import com.delivery.quickdeliver.dto.response.DeliveryResponse;
 import com.delivery.quickdeliver.dto.response.RiderResponse;
 import com.delivery.quickdeliver.service.BackOfficeService;
-import com.delivery.quickdeliver.service.DeliveryService;
-import com.delivery.quickdeliver.service.RiderService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -29,8 +27,6 @@ import java.util.Map;
 public class BackOfficeController {
 
     private final BackOfficeService backOfficeService;
-    private final RiderService riderService;
-    private final DeliveryService deliveryService;
 
     @GetMapping("/dashboard")
     @Operation(summary = "전체 대시보드", 

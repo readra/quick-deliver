@@ -65,7 +65,7 @@ public class AuthController {
 
     @PostMapping("/signup")
     @Operation(summary = "회원가입", description = "새로운 사용자를 등록합니다.")
-    public ResponseEntity<ApiResponse<String>> signup(@Valid @RequestBody SignupRequest signupRequest) {
+    public ResponseEntity<ApiResponse<Void>> signup(@Valid @RequestBody SignupRequest signupRequest) {
         log.info("Signup attempt for username: {}", signupRequest.getUsername());
 
         if (userRepository.existsByUsername(signupRequest.getUsername())) {

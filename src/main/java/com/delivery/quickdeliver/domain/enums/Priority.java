@@ -1,5 +1,8 @@
 package com.delivery.quickdeliver.domain.enums;
 
+import lombok.Getter;
+
+@Getter
 public enum Priority {
     LOW("일반", 120),      // 2시간 내
     NORMAL("보통", 60),    // 1시간 내
@@ -14,11 +17,4 @@ public enum Priority {
         this.maxMinutes = maxMinutes;
     }
 
-    public String getDescription() {
-        return description;
-    }
-
-    public int getMaxMinutes() {
-        return maxMinutes;
-    }
 }

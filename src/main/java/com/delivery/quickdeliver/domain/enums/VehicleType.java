@@ -1,5 +1,8 @@
 package com.delivery.quickdeliver.domain.enums;
 
+import lombok.Getter;
+
+@Getter
 public enum VehicleType {
     BIKE("자전거", 5, 2.0),
     MOTORCYCLE("오토바이", 10, 5.0),
@@ -16,15 +19,4 @@ public enum VehicleType {
         this.maxDistance = maxDistance;
     }
 
-    public String getDescription() {
-        return description;
-    }
-
-    public int getMaxWeight() {
-        return maxWeight;
-    }
-
-    public double getMaxDistance() {
-        return maxDistance;
-    }
 }

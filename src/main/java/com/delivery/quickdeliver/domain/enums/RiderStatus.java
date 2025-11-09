@@ -1,5 +1,8 @@
 package com.delivery.quickdeliver.domain.enums;
 
+import lombok.Getter;
+
+@Getter
 public enum RiderStatus {
     OFFLINE("오프라인"),
     AVAILABLE("배송 가능"),
@@ -13,7 +16,4 @@ public enum RiderStatus {
         this.description = description;
     }
 
-    public String getDescription() {
-        return description;
-    }
 }

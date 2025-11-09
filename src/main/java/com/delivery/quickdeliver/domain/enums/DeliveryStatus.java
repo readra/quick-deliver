@@ -1,5 +1,8 @@
 package com.delivery.quickdeliver.domain.enums;
 
+import lombok.Getter;
+
+@Getter
 public enum DeliveryStatus {
     PENDING("대기 중"),
     ASSIGNED("배송원 할당됨"),
@@ -15,7 +18,4 @@ public enum DeliveryStatus {
         this.description = description;
     }
 
-    public String getDescription() {
-        return description;
-    }
 }

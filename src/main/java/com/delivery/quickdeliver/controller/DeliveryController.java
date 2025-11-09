@@ -118,8 +118,7 @@ public class DeliveryController {
     @Operation(summary = "배송 평가", description = "완료된 배송에 대한 평가와 피드백을 등록합니다.")
     public ResponseEntity<ApiResponse<Void>> rateDelivery(
             @Parameter(description = "배송 ID") @PathVariable String deliveryId,
-            @Parameter(description = "평점 (1-5)") @RequestParam Integer rating,
-            @Parameter(description = "피드백") @RequestParam(required = false) String feedback) {
+            @Parameter(description = "평점 (1-5)") @RequestParam Integer rating) {
         log.info("Rating delivery {}: {} stars", deliveryId, rating);
         
         // DeliveryService에 rateDelivery 메소드 추가 필요

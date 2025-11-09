@@ -2,7 +2,6 @@ package com.delivery.quickdeliver.config;
 
 import com.delivery.quickdeliver.domain.entity.Address;
 import com.delivery.quickdeliver.domain.entity.Delivery;
-import com.delivery.quickdeliver.domain.entity.Merchant;
 import com.delivery.quickdeliver.domain.entity.Rider;
 import com.delivery.quickdeliver.domain.entity.User;
 import com.delivery.quickdeliver.domain.enums.DeliveryStatus;

@@ -49,15 +49,23 @@ public class WebSocketController {
         String riderId = (String) message.get("riderId");
         log.info("Rider {} connected to WebSocket", riderId);
         
-        // 세션에 riderId 저장
-        headerAccessor.getSessionAttributes().put("riderId", riderId);
+        // 세션에 riderId 저장 (Null 안전)
+        Map<String, Object> sessionAttributes = headerAccessor.getSessionAttributes();
+        if (sessionAttributes != null) {
+            sessionAttributes.put("riderId", riderId);
+            log.debug("Stored riderId in session: {}", riderId);
+        } else {
+            log.warn("Session attributes is null, cannot store riderId");
+        }
         
         // 연결 성공 메시지 전송
-        messagingTemplate.convertAndSendToUser(
-                riderId,
-                "/queue/connection",
-                Map.of("status", "connected", "message", "WebSocket connection established")
-        );
+        if (riderId != null) {
+            messagingTemplate.convertAndSendToUser(
+                    riderId,
+                    "/queue/connection",
+                    Map.of("status", "connected", "message", "WebSocket connection established")
+            );
+        }
     }
 
     /**
@@ -67,6 +75,11 @@ public class WebSocketController {
     public void sendUrgentMessage(@Payload Map<String, Object> message) {
         String riderId = (String) message.get("riderId");
         String urgentMessage = (String) message.get("message");
+        
+        if (riderId == null || urgentMessage == null) {
+            log.warn("Invalid urgent message: riderId or message is null");
+            return;
+        }
         
         log.info("Sending urgent message to rider {}: {}", riderId, urgentMessage);
         
@@ -81,11 +94,15 @@ public class WebSocketController {
      * 채팅 메시지 (고객 지원)
      */
     @MessageMapping("/chat/send")
-    public void handleChatMessage(@Payload Map<String, Object> chatMessage,
-                                  SimpMessageHeaderAccessor headerAccessor) {
+    public void handleChatMessage(@Payload Map<String, Object> chatMessage) {
         String sender = (String) chatMessage.get("sender");
         String recipient = (String) chatMessage.get("recipient");
         String message = (String) chatMessage.get("message");
+        
+        if (sender == null || recipient == null || message == null) {
+            log.warn("Invalid chat message: sender, recipient or message is null");
+            return;
+        }
         
         log.debug("Chat message from {} to {}: {}", sender, recipient, message);
         
