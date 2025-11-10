@@ -448,7 +448,7 @@ public class BackOfficeService {
                 .filter(d -> d.getStatus() == DeliveryStatus.PICKING_UP ||
                            d.getStatus() == DeliveryStatus.IN_TRANSIT ||
                            d.getStatus() == DeliveryStatus.ASSIGNED)
-                .collect(Collectors.toList());
+                .toList();
         
         monitoring.put("activeDeliveries", inProgress.stream()
                 .map(DeliveryResponse::from)

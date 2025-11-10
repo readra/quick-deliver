@@ -2,7 +2,6 @@ package com.delivery.quickdeliver.service;
 
 import com.delivery.quickdeliver.domain.entity.Delivery;
 import com.delivery.quickdeliver.domain.entity.Rider;
-import com.delivery.quickdeliver.domain.entity.RiderPerformance;
 import com.delivery.quickdeliver.domain.enums.DeliveryStatus;
 import com.delivery.quickdeliver.dto.response.AnalyticsResponse;
 import com.delivery.quickdeliver.repository.DeliveryRepository;
@@ -153,7 +152,7 @@ public class AnalyticsService {
             suggestions.add("라이더 부족: 추가 라이더 호출이 필요합니다.");
         }
 
-        if (delayedDeliveries.size() > 0) {
+        if (!delayedDeliveries.isEmpty()) {
             suggestions.add(String.format("%d건의 지연 배송이 있습니다. 우선순위 재조정이 필요합니다.",
                     delayedDeliveries.size()));
         }
@@ -242,7 +241,7 @@ public class AnalyticsService {
                         Collectors.counting()
                 ));
         
-        long avgCount = hourCounts.values().stream()
+        long avgCount = (long) hourCounts.values().stream()
                 .mapToLong(Long::longValue)
                 .average()
                 .orElse(0);

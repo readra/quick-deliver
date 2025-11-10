@@ -42,15 +42,17 @@ public interface DeliveryRepository extends JpaRepository<Delivery, Long> {
             "AND d.estimatedDeliveryTime < :now")
     List<Delivery> findDelayedDeliveries(@Param("now") LocalDateTime now);
     
-    // 라이더별 일일 배송 건수
-    @Query("SELECT COUNT(d) FROM Delivery d WHERE d.rider = :rider " +
-            "AND DATE(d.actualDeliveryTime) = DATE(:date) " +
-            "AND d.status = 'DELIVERED'")
+    // 라이더별 일일 배송 건수 (Native Query)
+    @Query(value = "SELECT COUNT(*) FROM deliveries d WHERE d.rider_id = :#{#rider.id} " +
+            "AND CAST(d.actual_delivery_time AS DATE) = CAST(:date AS DATE) " +
+            "AND d.status = 'DELIVERED'", 
+            nativeQuery = true)
     Long countDailyDeliveriesByRider(@Param("rider") Rider rider, 
                                      @Param("date") LocalDateTime date);
     
-    // 배송 성과 통계
-    @Query("SELECT AVG(TIMESTAMPDIFF(MINUTE, d.requestedTime, d.actualDeliveryTime)) " +
-            "FROM Delivery d WHERE d.rider = :rider AND d.status = 'DELIVERED'")
+    // 배송 성과 통계 (H2/PostgreSQL 호환)
+    @Query(value = "SELECT AVG(EXTRACT(EPOCH FROM (d.actual_delivery_time - d.requested_time)) / 60) " +
+            "FROM deliveries d WHERE d.rider_id = :#{#rider.id} AND d.status = 'DELIVERED'", 
+            nativeQuery = true)
     Double getAverageDeliveryTimeByRider(@Param("rider") Rider rider);
 }

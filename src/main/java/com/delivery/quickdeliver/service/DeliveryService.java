@@ -101,21 +101,20 @@ public class DeliveryService {
     }
 
     private Rider selectOptimalRider(List<Rider> riders, Delivery delivery) {
-        return riders.stream()
-                .filter(r -> r.getVehicleType().getMaxWeight() >= delivery.getWeight())
-                .sorted((r1, r2) -> {
-                    // 거리 기반 정렬 (가장 가까운 라이더)
-                    double dist1 = calculateDistance(
-                            r1.getCurrentLatitude(), r1.getCurrentLongitude(),
-                            delivery.getPickupAddress().getLatitude(),
-                            delivery.getPickupAddress().getLongitude());
-                    double dist2 = calculateDistance(
-                            r2.getCurrentLatitude(), r2.getCurrentLongitude(),
-                            delivery.getPickupAddress().getLatitude(),
-                            delivery.getPickupAddress().getLongitude());
-                    return Double.compare(dist1, dist2);
-                })
-                .findFirst()
+		// 거리 기반 정렬 (가장 가까운 라이더)
+		return riders.stream()
+				.filter(r -> r.getVehicleType().getMaxWeight() >= delivery.getWeight()).min((r1, r2) -> {
+					// 거리 기반 정렬 (가장 가까운 라이더)
+					double dist1 = calculateDistance(
+							r1.getCurrentLatitude(), r1.getCurrentLongitude(),
+							delivery.getPickupAddress().getLatitude(),
+							delivery.getPickupAddress().getLongitude());
+					double dist2 = calculateDistance(
+							r2.getCurrentLatitude(), r2.getCurrentLongitude(),
+							delivery.getPickupAddress().getLatitude(),
+							delivery.getPickupAddress().getLongitude());
+					return Double.compare(dist1, dist2);
+				})
                 .orElse(riders.get(0));
     }
 

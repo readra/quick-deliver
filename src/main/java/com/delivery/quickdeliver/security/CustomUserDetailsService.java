@@ -1,6 +1,5 @@
 package com.delivery.quickdeliver.security;
 
-import com.delivery.quickdeliver.domain.entity.User;
 import com.delivery.quickdeliver.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -18,17 +17,15 @@ public class CustomUserDetailsService implements UserDetailsService {
     @Override
     @Transactional
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException(
-                        "User not found with username: " + username));
-        return user;
+		return userRepository.findByUsername(username)
+				.orElseThrow(() -> new UsernameNotFoundException(
+						"User not found with username: " + username));
     }
 
     @Transactional
     public UserDetails loadUserById(Long id) {
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new UsernameNotFoundException(
-                        "User not found with id: " + id));
-        return user;
+		return userRepository.findById(id)
+				.orElseThrow(() -> new UsernameNotFoundException(
+						"User not found with id: " + id));
     }
 }
