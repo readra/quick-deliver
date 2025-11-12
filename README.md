@@ -549,7 +549,7 @@ http://localhost:8080/swagger-ui.html
 
 ### 기술 스택 요약
 - Backend: Spring Boot 3.5.7, Spring Security 6.x, JWT
-- Database: H2, PostgreSQL (Ready)
+- Database: H2
 - Real-time: WebSocket, STOMP, SockJS
 - Monitoring: Actuator, Prometheus
 - Documentation: Swagger/OpenAPI 3.0
