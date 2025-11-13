@@ -497,7 +497,7 @@ http://localhost:8080/swagger-ui.html
 └────────┬─────────────────────┘
          │
 ┌────────▼─────────────────────┐
-│   Database (H2/PostgreSQL)   │
+│   Database (H2)   │
 │   - users                    │
 │   - riders                   │
 │   - deliveries               │
