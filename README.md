@@ -44,7 +44,7 @@
 ## 🛠️ 기술 스택
 
 - **Backend**: Spring Boot 3.5.7
-- **Database**: H2 (개발), PostgreSQL (프로덕션 준비)
+- **Database**: H2 (개발), PostgreSQL (프로덕션)
 - **Security**: Spring Security 6.x + JWT (jjwt 0.11.5)
 - **Real-time**: WebSocket + STOMP + SockJS
 - **Documentation**: SpringDoc OpenAPI 3.0 (Swagger UI)
