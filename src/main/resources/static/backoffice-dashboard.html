@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>백오피스 대시보드 - Quick Deliver</title>
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 1.8em;
+        }
+
+        .header .controls {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .btn-logout {
+            background: rgba(255,255,255,0.2);
+            border: 2px solid white;
+            color: white;
+            padding: 8px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-logout:hover {
+            background: white;
+            color: #667eea;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 30px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2em;
+        }
+
+        .icon-riders { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .icon-deliveries { background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%); }
+        .icon-active { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
+        .icon-pending { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); }
+
+        .stat-content {
+            flex: 1;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 2em;
+            font-weight: 700;
+            color: #333;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .card h2 {
+            font-size: 1.3em;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.9em;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .rider-list {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .rider-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s;
+        }
+
+        .rider-item:hover {
+            background: #e9ecef;
+            transform: translateX(5px);
+        }
+
+        .rider-info {
+            flex: 1;
+        }
+
+        .rider-name {
+            font-weight: 700;
+            font-size: 1.1em;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .rider-details {
+            display: flex;
+            gap: 15px;
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .rider-status {
+            padding: 5px 12px;
+            border-radius: 12px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+
+        .status-available {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .status-busy {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .status-offline {
+            background: #e5e7eb;
+            color: #4b5563;
+        }
+
+        .delivery-list {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .delivery-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 12px;
+            border-left: 4px solid #667eea;
+        }
+
+        .delivery-item.pending {
+            border-left-color: #ef4444;
+        }
+
+        .delivery-item.in-transit {
+            border-left-color: #10b981;
+        }
+
+        .delivery-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .delivery-id {
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .delivery-status {
+            padding: 5px 12px;
+            border-radius: 12px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+
+        .status-pending { background: #fee; color: #c33; }
+        .status-assigned { background: #dbeafe; color: #1e40af; }
+        .status-picking_up { background: #fef3c7; color: #92400e; }
+        .status-in_transit { background: #d1fae5; color: #065f46; }
+        .status-delivered { background: #e0e7ff; color: #3730a3; }
+
+        .delivery-info {
+            font-size: 0.9em;
+            color: #666;
+            margin: 5px 0;
+        }
+
+        .delivery-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .btn-small {
+            padding: 6px 14px;
+            font-size: 0.85em;
+        }
+
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+
+        .connection-status {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            border-radius: 10px;
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .connection-status.connected {
+            background: #10b981;
+            color: white;
+        }
+
+        .connection-status.disconnected {
+            background: #ef4444;
+            color: white;
+        }
+
+        .pulse {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: white;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        .full-width {
+            grid-column: 1 / -1;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            background: none;
+            border: none;
+            border-bottom: 3px solid transparent;
+            cursor: pointer;
+            font-weight: 600;
+            color: #666;
+            transition: all 0.3s;
+        }
+
+        .tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @media (max-width: 1200px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🎯 Quick Deliver - 관제센터</h1>
+        <div class="controls">
+            <span id="userName">관리자</span>
+            <button class="btn-logout" onclick="logout()">로그아웃</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- 통계 카드 -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon icon-riders">👥</div>
+                <div class="stat-content">
+                    <div class="stat-label">전체 라이더</div>
+                    <div class="stat-value" id="totalRiders">0</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon icon-active">🚴</div>
+                <div class="stat-content">
+                    <div class="stat-label">활성 라이더</div>
+                    <div class="stat-value" id="activeRiders">0</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon icon-deliveries">📦</div>
+                <div class="stat-content">
+                    <div class="stat-label">총 배송</div>
+                    <div class="stat-value" id="totalDeliveries">0</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon icon-pending">⏱️</div>
+                <div class="stat-content">
+                    <div class="stat-label">대기 배송</div>
+                    <div class="stat-value" id="pendingDeliveries">0</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 메인 컨텐츠 -->
+        <div class="main-grid">
+            <!-- 라이더 관리 -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>👥 라이더 현황</h2>
+                    <button class="btn btn-primary" onclick="window.location.href='/delivery-map.html'">지도 보기</button>
+                </div>
+                <div class="tabs">
+                    <button class="tab active" onclick="switchTab('all')">전체</button>
+                    <button class="tab" onclick="switchTab('active')">활성</button>
+                    <button class="tab" onclick="switchTab('available')">대기</button>
+                </div>
+                <div id="allRiders" class="tab-content active">
+                    <div id="riderList" class="rider-list">
+                        <div class="empty-state">
+                            <p>라이더 정보를 불러오는 중...</p>
+                        </div>
+                    </div>
+                </div>
+                <div id="activeRidersTab" class="tab-content">
+                    <div id="activeRiderList" class="rider-list">
+                        <div class="empty-state">
+                            <p>활성 라이더가 없습니다</p>
+                        </div>
+                    </div>
+                </div>
+                <div id="availableRidersTab" class="tab-content">
+                    <div id="availableRiderList" class="rider-list">
+                        <div class="empty-state">
+                            <p>대기 중인 라이더가 없습니다</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 배송 관리 -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>📦 배송 현황</h2>
+                    <button class="btn btn-primary" onclick="showCreateDelivery()">새 배송 생성</button>
+                </div>
+                <div id="deliveryList" class="delivery-list">
+                    <div class="empty-state">
+                        <p>배송 정보를 불러오는 중...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 실시간 활동 로그 -->
+        <div class="card full-width" style="margin-top: 20px;">
+            <h2>📡 실시간 활동</h2>
+            <div id="activityLog" style="max-height: 300px; overflow-y: auto; font-family: monospace; font-size: 0.9em;">
+                <div style="color: #999; padding: 20px; text-align: center;">
+                    실시간 활동을 모니터링하는 중...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="connectionStatus" class="connection-status disconnected">
+        <div class="pulse"></div>
+        <span>연결 중...</span>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:8080/api';
+        const WS_URL = 'http://localhost:8080/ws';
+        
+        let stompClient = null;
+        let allRidersData = [];
+
+        // 인증 확인
+        function checkAuth() {
+            const token = localStorage.getItem('jwt_token');
+            const userInfo = localStorage.getItem('user_info');
+            
+            if (!token || !userInfo) {
+                window.location.href = '/login.html';
+                return null;
+            }
+
+            const user = JSON.parse(userInfo);
+            if (user.role !== 'BACKOFFICE' && user.role !== 'ADMIN') {
+                alert('백오피스 권한이 필요합니다.');
+                window.location.href = '/login.html';
+                return null;
+            }
+
+            return { token, user };
+        }
+
+        // 로그아웃
+        function logout() {
+            if (stompClient) {
+                stompClient.disconnect();
+            }
+            localStorage.removeItem('jwt_token');
+            localStorage.removeItem('user_info');
+            window.location.href = '/login.html';
+        }
+
+        // API 호출 헬퍼
+        async function apiCall(endpoint, method = 'GET', body = null) {
+            const auth = checkAuth();
+            if (!auth) return null;
+
+            const options = {
+                method,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${auth.token}`
+                }
+            };
+
+            if (body) {
+                options.body = JSON.stringify(body);
+            }
+
+            const response = await fetch(`${API_BASE_URL}${endpoint}`, options);
+            
+            if (response.status === 401) {
+                logout();
+                return null;
+            }
+
+            if (!response.ok) {
+                throw new Error(`API 호출 실패: ${response.status}`);
+            }
+
+            return await response.json();
+        }
+
+        // 통계 로드
+        async function loadStats() {
+            try {
+                const [allRiders, activeRiders, pendingDeliveries] = await Promise.all([
+                    apiCall('/riders/active'),
+                    apiCall('/riders/active'),
+                    apiCall('/deliveries/pending')
+                ]);
+
+                document.getElementById('totalRiders').textContent = allRiders?.length || 0;
+                document.getElementById('activeRiders').textContent = 
+                    activeRiders?.filter(r => r.status !== 'OFFLINE').length || 0;
+                document.getElementById('pendingDeliveries').textContent = pendingDeliveries?.length || 0;
+
+                // 총 배송 수는 임시로 설정 (실제로는 별도 API 필요)
+                document.getElementById('totalDeliveries').textContent = '0';
+
+            } catch (error) {
+                console.error('통계 로드 실패:', error);
+            }
+        }
+
+        // 라이더 목록 로드
+        async function loadRiders() {
+            try {
+                allRidersData = await apiCall('/riders/active');
+                
+                if (allRidersData && allRidersData.length > 0) {
+                    renderRiders(allRidersData, 'riderList');
+                    
+                    // 활성 라이더 필터링
+                    const activeRiders = allRidersData.filter(r => r.status === 'AVAILABLE' || r.status === 'BUSY');
+                    renderRiders(activeRiders, 'activeRiderList');
+                    
+                    // 대기 라이더 필터링
+                    const availableRiders = allRidersData.filter(r => r.status === 'AVAILABLE');
+                    renderRiders(availableRiders, 'availableRiderList');
+                } else {
+                    document.getElementById('riderList').innerHTML = '<div class="empty-state"><p>등록된 라이더가 없습니다</p></div>';
+                }
+            } catch (error) {
+                console.error('라이더 목록 로드 실패:', error);
+            }
+        }
+
+        // 라이더 렌더링
+        function renderRiders(riders, containerId) {
+            const container = document.getElementById(containerId);
+            
+            if (!riders || riders.length === 0) {
+                container.innerHTML = '<div class="empty-state"><p>라이더가 없습니다</p></div>';
+                return;
+            }
+
+            container.innerHTML = riders.map(rider => `
+                <div class="rider-item">
+                    <div class="rider-info">
+                        <div class="rider-name">${rider.name || rider.riderId}</div>
+                        <div class="rider-details">
+                            <span>📱 ${rider.phone || 'N/A'}</span>
+                            <span>🚗 ${rider.vehicleType || 'N/A'}</span>
+                            <span>⭐ ${(rider.rating || 0).toFixed(1)}</span>
+                        </div>
+                    </div>
+                    <span class="rider-status status-${(rider.status || 'OFFLINE').toLowerCase()}">
+                        ${getStatusText(rider.status)}
+                    </span>
+                </div>
+            `).join('');
+        }
+
+        // 배송 목록 로드
+        async function loadDeliveries() {
+            try {
+                const deliveries = await apiCall('/deliveries/pending');
+                
+                if (deliveries && deliveries.length > 0) {
+                    renderDeliveries(deliveries);
+                } else {
+                    document.getElementById('deliveryList').innerHTML = 
+                        '<div class="empty-state"><p>진행 중인 배송이 없습니다</p></div>';
+                }
+            } catch (error) {
+                console.error('배송 목록 로드 실패:', error);
+            }
+        }
+
+        // 배송 렌더링
+        function renderDeliveries(deliveries) {
+            const container = document.getElementById('deliveryList');
+            
+            container.innerHTML = deliveries.map(delivery => `
+                <div class="delivery-item ${delivery.status === 'PENDING' ? 'pending' : delivery.status === 'IN_TRANSIT' ? 'in-transit' : ''}">
+                    <div class="delivery-header">
+                        <span class="delivery-id">${delivery.deliveryId}</span>
+                        <span class="delivery-status status-${delivery.status.toLowerCase()}">${getStatusText(delivery.status)}</span>
+                    </div>
+                    <div class="delivery-info">
+                        📍 픽업: ${delivery.pickupAddress || '주소 정보 없음'}
+                    </div>
+                    <div class="delivery-info">
+                        📍 배송: ${delivery.deliveryAddress || '주소 정보 없음'}
+                    </div>
+                    <div class="delivery-info">
+                        🚴 라이더: ${delivery.riderName || '미배정'}
+                    </div>
+                    <div class="delivery-actions">
+                        ${delivery.status === 'PENDING' ? 
+                            `<button class="btn btn-success btn-small" onclick="assignDelivery('${delivery.deliveryId}')">배정하기</button>` : 
+                            ''}
+                        <button class="btn btn-danger btn-small" onclick="cancelDelivery('${delivery.deliveryId}')">취소</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // 상태 텍스트 변환
+        function getStatusText(status) {
+            const statusMap = {
+                'AVAILABLE': '대기중',
+                'BUSY': '배달중',
+                'OFFLINE': '오프라인',
+                'PENDING': '대기',
+                'ASSIGNED': '배정됨',
+                'PICKING_UP': '픽업중',
+                'IN_TRANSIT': '배송중',
+                'DELIVERED': '완료',
+                'CANCELLED': '취소'
+            };
+            return statusMap[status] || status;
+        }
+
+        // 탭 전환
+        function switchTab(tab) {
+            // 탭 버튼 활성화
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+
+            // 탭 컨텐츠 표시
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            
+            switch(tab) {
+                case 'all':
+                    document.getElementById('allRiders').classList.add('active');
+                    break;
+                case 'active':
+                    document.getElementById('activeRidersTab').classList.add('active');
+                    break;
+                case 'available':
+                    document.getElementById('availableRidersTab').classList.add('active');
+                    break;
+            }
+        }
+
+        // 배송 생성
+        function showCreateDelivery() {
+            const pickupAddress = prompt('픽업 주소를 입력하세요:');
+            if (!pickupAddress) return;
+
+            const deliveryAddress = prompt('배송 주소를 입력하세요:');
+            if (!deliveryAddress) return;
+
+            createDelivery(pickupAddress, deliveryAddress);
+        }
+
+        async function createDelivery(pickupAddress, deliveryAddress) {
+            try {
+                const delivery = await apiCall('/deliveries', 'POST', {
+                    pickupAddress,
+                    deliveryAddress,
+                    customerName: '고객',
+                    customerPhone: '010-0000-0000'
+                });
+
+                addActivityLog(`새 배송 생성: ${delivery.deliveryId}`);
+                await loadDeliveries();
+                await loadStats();
+            } catch (error) {
+                alert('배송 생성 실패: ' + error.message);
+            }
+        }
+
+        // 배송 배정
+        async function assignDelivery(deliveryId) {
+            // 실제로는 라이더 선택 UI를 보여주어야 하지만, 여기서는 자동 배정
+            alert('자동 배정 기능은 백엔드에서 처리됩니다.');
+            await loadDeliveries();
+        }
+
+        // 배송 취소
+        async function cancelDelivery(deliveryId) {
+            if (!confirm('정말 이 배송을 취소하시겠습니까?')) return;
+
+            try {
+                await apiCall(`/deliveries/${deliveryId}/cancel`, 'POST');
+                addActivityLog(`배송 취소: ${deliveryId}`);
+                await loadDeliveries();
+                await loadStats();
+            } catch (error) {
+                alert('배송 취소 실패: ' + error.message);
+            }
+        }
+
+        // 활동 로그 추가
+        function addActivityLog(message) {
+            const log = document.getElementById('activityLog');
+            const time = new Date().toLocaleTimeString('ko-KR');
+            const entry = document.createElement('div');
+            entry.style.padding = '8px';
+            entry.style.borderBottom = '1px solid #e5e7eb';
+            entry.innerHTML = `<span style="color: #667eea;">[${time}]</span> ${message}`;
+            log.insertBefore(entry, log.firstChild);
+
+            // 최대 50개 항목만 유지
+            while (log.children.length > 50) {
+                log.removeChild(log.lastChild);
+            }
+        }
+
+        // WebSocket 연결
+        function connectWebSocket() {
+            const socket = new SockJS(WS_URL);
+            stompClient = Stomp.over(socket);
+            
+            stompClient.connect({}, function(frame) {
+                console.log('WebSocket 연결됨:', frame);
+                updateConnectionStatus(true);
+                addActivityLog('실시간 모니터링 시작');
+
+                // 라이더 위치 구독
+                stompClient.subscribe('/topic/monitoring/riders', function(message) {
+                    const data = JSON.parse(message.body);
+                    addActivityLog(`라이더 위치 업데이트: ${data.riderId} (${data.latitude}, ${data.longitude})`);
+                });
+
+                // 배송 상태 구독
+                stompClient.subscribe('/topic/monitoring/deliveries', function(message) {
+                    const data = JSON.parse(message.body);
+                    addActivityLog(`배송 상태 변경: ${data.deliveryId} → ${getStatusText(data.status)}`);
+                    loadDeliveries();
+                    loadStats();
+                });
+
+            }, function(error) {
+                console.error('WebSocket 연결 실패:', error);
+                updateConnectionStatus(false);
+                addActivityLog('연결 끊김 - 재연결 시도 중...');
+                
+                // 재연결 시도
+                setTimeout(connectWebSocket, 5000);
+            });
+        }
+
+        // 연결 상태 업데이트
+        function updateConnectionStatus(connected) {
+            const statusDiv = document.getElementById('connectionStatus');
+            if (connected) {
+                statusDiv.className = 'connection-status connected';
+                statusDiv.querySelector('span').textContent = '실시간 연결됨';
+            } else {
+                statusDiv.className = 'connection-status disconnected';
+                statusDiv.querySelector('span').textContent = '연결 끊김';
+            }
+        }
+
+        // 초기화
+        window.addEventListener('DOMContentLoaded', async () => {
+            const auth = checkAuth();
+            if (!auth) return;
+
+            document.getElementById('userName').textContent = auth.user.username;
+
+            await loadStats();
+            await loadRiders();
+            await loadDeliveries();
+            connectWebSocket();
+
+            // 주기적으로 데이터 새로고침 (30초마다)
+            setInterval(() => {
+                loadStats();
+                loadRiders();
+                loadDeliveries();
+            }, 30000);
+        });
+    </script>
+</body>
+</html>

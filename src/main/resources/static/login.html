@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quick Deliver - 로그인</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .login-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            width: 100%;
+            max-width: 900px;
+            display: flex;
+            min-height: 500px;
+        }
+
+        .login-left {
+            flex: 1;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 60px 40px;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .login-left h1 {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            font-weight: 700;
+        }
+
+        .login-left p {
+            font-size: 1.1em;
+            line-height: 1.6;
+            opacity: 0.9;
+        }
+
+        .login-right {
+            flex: 1;
+            padding: 60px 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .login-right h2 {
+            font-size: 2em;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .login-right .subtitle {
+            color: #666;
+            margin-bottom: 40px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            color: #555;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1em;
+            transition: all 0.3s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn-login {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-login:active {
+            transform: translateY(0);
+        }
+
+        .test-accounts {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .test-accounts h3 {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 15px;
+        }
+
+        .account-btn {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 8px;
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: left;
+            font-size: 0.9em;
+        }
+
+        .account-btn:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+
+        .account-btn .role {
+            font-weight: 600;
+            color: #667eea;
+        }
+
+        .error-message {
+            background: #fee;
+            color: #c33;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .success-message {
+            background: #efe;
+            color: #3c3;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .login-container {
+                flex-direction: column;
+            }
+
+            .login-left {
+                padding: 40px 30px;
+            }
+
+            .login-right {
+                padding: 40px 30px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-left">
+            <h1>🚀 Quick Deliver</h1>
+            <p>배달 최적화 시스템에 오신 것을 환영합니다. 실시간 배송 추적과 효율적인 라이더 관리를 경험하세요.</p>
+        </div>
+        <div class="login-right">
+            <h2>로그인</h2>
+            <p class="subtitle">계정 정보를 입력하세요</p>
+
+            <div id="errorMessage" class="error-message"></div>
+            <div id="successMessage" class="success-message"></div>
+
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="username">사용자명</label>
+                    <input type="text" id="username" name="username" required placeholder="사용자명을 입력하세요">
+                </div>
+                <div class="form-group">
+                    <label for="password">비밀번호</label>
+                    <input type="password" id="password" name="password" required placeholder="비밀번호를 입력하세요">
+                </div>
+                <button type="submit" class="btn-login">로그인</button>
+            </form>
+
+            <div class="test-accounts">
+                <h3>테스트 계정 (클릭하여 자동 입력)</h3>
+                <button class="account-btn" onclick="fillLogin('admin', 'admin123')">
+                    <span class="role">관리자</span> - admin / admin123
+                </button>
+                <button class="account-btn" onclick="fillLogin('backoffice', 'backoffice123')">
+                    <span class="role">백오피스</span> - backoffice / backoffice123
+                </button>
+                <button class="account-btn" onclick="fillLogin('rider1', 'rider123')">
+                    <span class="role">라이더</span> - rider1 / rider123
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:8080/api';
+
+        // 테스트 계정 자동 입력
+        function fillLogin(username, password) {
+            document.getElementById('username').value = username;
+            document.getElementById('password').value = password;
+        }
+
+        // 에러 메시지 표시
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            setTimeout(() => {
+                errorDiv.style.display = 'none';
+            }, 5000);
+        }
+
+        // 성공 메시지 표시
+        function showSuccess(message) {
+            const successDiv = document.getElementById('successMessage');
+            successDiv.textContent = message;
+            successDiv.style.display = 'block';
+        }
+
+        // 로그인 폼 제출
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+
+                if (!response.ok) {
+                    throw new Error('로그인에 실패했습니다. 사용자명과 비밀번호를 확인해주세요.');
+                }
+
+                const data = await response.json();
+
+                // JWT 토큰과 사용자 정보 저장
+                localStorage.setItem('jwt_token', data.token);
+                localStorage.setItem('user_info', JSON.stringify({
+                    username: data.username,
+                    role: data.role
+                }));
+
+                showSuccess('로그인 성공! 페이지를 이동합니다...');
+
+                // 역할에 따라 다른 페이지로 리다이렉트
+                setTimeout(() => {
+                    if (data.role === 'RIDER') {
+                        window.location.href = '/rider-dashboard.html';
+                    } else if (data.role === 'BACKOFFICE' || data.role === 'ADMIN') {
+                        window.location.href = '/backoffice-dashboard.html';
+                    } else {
+                        window.location.href = '/delivery-map.html';
+                    }
+                }, 1000);
+
+            } catch (error) {
+                showError(error.message);
+            }
+        });
+
+        // 이미 로그인되어 있는지 확인
+        window.addEventListener('DOMContentLoaded', () => {
+            const token = localStorage.getItem('jwt_token');
+            const userInfo = localStorage.getItem('user_info');
+
+            if (token && userInfo) {
+                const user = JSON.parse(userInfo);
+                if (user.role === 'RIDER') {
+                    window.location.href = '/rider-dashboard.html';
+                } else if (user.role === 'BACKOFFICE' || user.role === 'ADMIN') {
+                    window.location.href = '/backoffice-dashboard.html';
+                }
+            }
+        });
+    </script>
+</body>
+</html>
