@@ -24,7 +24,7 @@ spring:
         
   security:
     user:
-      name: admin
+      name: admin #FIXME
       password: admin123 #FIXME
       
 server:
