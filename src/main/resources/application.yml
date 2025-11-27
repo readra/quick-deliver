@@ -42,7 +42,7 @@ jwt:
   
 logging:
   level:
-    com.delivery.quickdeliver: DEBUG
+    com.delivery.quickdeliver: INFO
     org.springframework.web: DEBUG
     
 management:
