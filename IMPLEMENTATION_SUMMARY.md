@@ -267,7 +267,7 @@ DELIVERED (완료)
 ## 🔍 다음 단계 (Phase 2-4)
 
 ### Phase 2: 백오피스 API
-- [ ] BackOfficeController
+- [x] BackOfficeController
 - [ ] 전체 대시보드
 - [ ] 라이더 관리
 - [ ] 배송 관리
