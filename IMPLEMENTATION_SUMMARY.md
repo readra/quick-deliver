@@ -268,7 +268,7 @@ DELIVERED (완료)
 
 ### Phase 2: 백오피스 API
 - [x] BackOfficeController
-- [ ] 전체 대시보드
+- [x] 전체 대시보드
 - [ ] 라이더 관리
 - [ ] 배송 관리
 - [ ] 수동 배정 기능
