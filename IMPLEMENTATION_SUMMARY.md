@@ -270,8 +270,8 @@ DELIVERED (완료)
 - [x] BackOfficeController
 - [x] 전체 대시보드
 - [x] 라이더 관리
-- [ ] 배송 관리
-- [ ] 수동 배정 기능
+- [x] 배송 관리
+- [x] 수동 배정 기능
 
 ### Phase 3: 보안 및 실시간 통신
 - [ ] JWT 인증 구현
