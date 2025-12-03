@@ -274,7 +274,7 @@ DELIVERED (완료)
 - [x] 수동 배정 기능
 
 ### Phase 3: 보안 및 실시간 통신
-- [ ] JWT 인증 구현
+- [x] JWT 인증 구현
 - [ ] SecurityConfig
 - [ ] WebSocketConfig
 - [ ] STOMP 메시징
