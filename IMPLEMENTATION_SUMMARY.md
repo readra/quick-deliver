@@ -276,7 +276,7 @@ DELIVERED (완료)
 ### Phase 3: 보안 및 실시간 통신
 - [x] JWT 인증 구현
 - [x] SecurityConfig
-- [ ] WebSocketConfig
+- [x] WebSocketConfig
 - [ ] STOMP 메시징
 
 ### Phase 4: 완성도 향상
