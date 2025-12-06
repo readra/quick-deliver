@@ -277,7 +277,7 @@ DELIVERED (완료)
 - [x] JWT 인증 구현
 - [x] SecurityConfig
 - [x] WebSocketConfig
-- [ ] STOMP 메시징
+- [x] STOMP 메시징
 
 ### Phase 4: 완성도 향상
 - [ ] 단위 테스트
