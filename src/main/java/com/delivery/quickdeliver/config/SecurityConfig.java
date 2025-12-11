@@ -53,6 +53,10 @@ public class SecurityConfig {
                         .requestMatchers("/h2-console/**").permitAll()
                         .requestMatchers("/actuator/**").permitAll()
                         
+                        // Static resources (HTML, CSS, JS, images)
+                        .requestMatchers("/*.html", "/*.css", "/*.js", "/*.png", "/*.jpg", "/*.ico").permitAll()
+                        .requestMatchers("/static/**", "/public/**", "/resources/**").permitAll()
+                        
                         // Swagger
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
                         

@@ -277,13 +277,20 @@
                     throw new Error('로그인에 실패했습니다. 사용자명과 비밀번호를 확인해주세요.');
                 }
 
-                const data = await response.json();
+                const result = await response.json();
+
+                // ApiResponse 구조 처리: { success: true, message: "...", data: {...} }
+                const data = result.data || result;
+
+                console.log('Login response:', data); // 디버깅용
 
                 // JWT 토큰과 사용자 정보 저장
                 localStorage.setItem('jwt_token', data.token);
                 localStorage.setItem('user_info', JSON.stringify({
                     username: data.username,
-                    role: data.role
+                    name: data.name,
+                    role: data.role,
+                    riderId: data.riderId
                 }));
 
                 showSuccess('로그인 성공! 페이지를 이동합니다...');
@@ -301,6 +308,7 @@
 
             } catch (error) {
                 showError(error.message);
+                console.error('Login error:', error); // 디버깅용
             }
         });
 

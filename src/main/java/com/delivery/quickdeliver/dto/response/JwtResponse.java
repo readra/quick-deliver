@@ -17,6 +17,7 @@ public class JwtResponse {
     private String name;
     private String email;
     private UserRole role;
+    private String riderId;  // 라이더 ID 추가
 
     public JwtResponse(String token, Long id, String username, String name, String email, UserRole role) {
         this.token = token;

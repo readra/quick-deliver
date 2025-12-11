@@ -50,14 +50,15 @@ public class AuthController {
         String jwt = tokenProvider.generateToken(authentication);
 
         User user = (User) authentication.getPrincipal();
-        JwtResponse jwtResponse = new JwtResponse(
-                jwt,
-                user.getId(),
-                user.getUsername(),
-                user.getName(),
-                user.getEmail(),
-                user.getRole()
-        );
+        JwtResponse jwtResponse = JwtResponse.builder()
+                .token(jwt)
+                .id(user.getId())
+                .username(user.getUsername())
+                .name(user.getName())
+                .email(user.getEmail())
+                .role(user.getRole())
+                .riderId(user.getRider() != null ? user.getRider().getRiderId() : null)
+                .build();
 
         log.info("User {} logged in successfully", user.getUsername());
         return ResponseEntity.ok(ApiResponse.success("로그인 성공", jwtResponse));
@@ -104,6 +105,7 @@ public class AuthController {
                 .name(user.getName())
                 .email(user.getEmail())
                 .role(user.getRole())
+                .riderId(user.getRider() != null ? user.getRider().getRiderId() : null)
                 .build();
 
         return ResponseEntity.ok(ApiResponse.success(userInfo));

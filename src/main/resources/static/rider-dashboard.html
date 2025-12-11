@@ -467,20 +467,26 @@
                 const auth = checkAuth();
                 if (!auth) return;
 
-                document.getElementById('riderName').textContent = auth.user.username;
+                document.getElementById('riderName').textContent = auth.user.name || auth.user.username;
 
-                // 라이더 ID 조회 (username으로 검색)
-                const riders = await apiCall('/riders/active');
-                const rider = riders.find(r => r.username === auth.user.username);
-                
-                if (rider) {
-                    riderId = rider.riderId;
-                    riderInfo = rider;
-                    updateRiderStatus(rider.status);
-                    
+                // 로그인 응답에서 riderId 가져오기
+                if (auth.user.riderId) {
+                    riderId = auth.user.riderId;
+
                     // 대시보드 정보 로드
-                    loadDashboard();
-                    loadDeliveries();
+                    await loadDashboard();
+                    await loadDeliveries();
+
+                    // 라이더 상태 가져오기
+                    const response = await apiCall('/riders/active');
+                    const riders = response?.data || response;
+                    const rider = Array.isArray(riders) ? riders.find(r => r.riderId === riderId) : null;
+                    if (rider) {
+                        riderInfo = rider;
+                        updateRiderStatus(rider.status);
+                    }
+                } else {
+                    alert('라이더 정보를 찾을 수 없습니다.');
                 }
 
             } catch (error) {
