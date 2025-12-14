@@ -162,14 +162,16 @@ public class DataLoader {
                             .contactName("고객A")
                             .contactPhone("010-9876-5432")
                             .build())
-                    .status(DeliveryStatus.PENDING)
+                    .rider(rider1)
+                    .status(DeliveryStatus.IN_TRANSIT)
                     .priority(Priority.NORMAL)
                     .itemDescription("치킨 2마리 + 콜라 2병")
                     .weight(3.5)
                     .quantity(1)
                     .deliveryFee(3500)
-                    .requestedTime(LocalDateTime.now())
-                    .estimatedDeliveryTime(LocalDateTime.now().plusMinutes(60))
+                    .requestedTime(LocalDateTime.now().minusMinutes(30))
+                    .estimatedPickupTime(LocalDateTime.now().minusMinutes(20))
+                    .estimatedDeliveryTime(LocalDateTime.now().plusMinutes(10))
                     .estimatedDistance(2.5)
                     .build();
 
@@ -203,8 +205,137 @@ public class DataLoader {
                     .estimatedDistance(3.8)
                     .build();
 
+            Delivery delivery3 = Delivery.builder()
+                    .deliveryId("DEL-TEST003")
+                    .orderNumber("ORD-" + UUID.randomUUID().toString().substring(0, 8))
+                    .pickupAddress(Address.builder()
+                            .address("서울특별시 송파구 올림픽로 240")
+                            .detailAddress("롯데월드타워 1층")
+                            .latitude(37.5125)
+                            .longitude(127.1025)
+                            .contactName("송파상점")
+                            .contactPhone("02-3456-7890")
+                            .build())
+                    .deliveryAddress(Address.builder()
+                            .address("서울특별시 강남구 봉은사로 524")
+                            .detailAddress("삼성동 아파트 205동 501호")
+                            .latitude(37.5140)
+                            .longitude(127.0594)
+                            .contactName("고객C")
+                            .contactPhone("010-7654-3210")
+                            .build())
+                    .status(DeliveryStatus.PENDING)
+                    .priority(Priority.URGENT)
+                    .itemDescription("의료용품 긴급배송")
+                    .weight(1.0)
+                    .quantity(1)
+                    .deliveryFee(8000)
+                    .requestedTime(LocalDateTime.now())
+                    .estimatedDeliveryTime(LocalDateTime.now().plusMinutes(20))
+                    .estimatedDistance(1.8)
+                    .build();
+
+            Delivery delivery4 = Delivery.builder()
+                    .deliveryId("DEL-TEST004")
+                    .orderNumber("ORD-" + UUID.randomUUID().toString().substring(0, 8))
+                    .pickupAddress(Address.builder()
+                            .address("서울특별시 중구 명동길 14")
+                            .detailAddress("명동상가 2층")
+                            .latitude(37.5636)
+                            .longitude(126.9826)
+                            .contactName("명동상점")
+                            .contactPhone("02-4567-8901")
+                            .build())
+                    .deliveryAddress(Address.builder()
+                            .address("서울특별시 용산구 한강대로 405")
+                            .detailAddress("용산역 3번 출구")
+                            .latitude(37.5295)
+                            .longitude(126.9645)
+                            .contactName("고객D")
+                            .contactPhone("010-6543-2109")
+                            .build())
+                    .rider(rider2)
+                    .status(DeliveryStatus.PICKING_UP)
+                    .priority(Priority.NORMAL)
+                    .itemDescription("서류 봉투")
+                    .weight(0.5)
+                    .quantity(1)
+                    .deliveryFee(4000)
+                    .requestedTime(LocalDateTime.now().minusMinutes(40))
+                    .estimatedPickupTime(LocalDateTime.now().minusMinutes(35))
+                    .estimatedDeliveryTime(LocalDateTime.now().plusMinutes(5))
+                    .estimatedDistance(4.2)
+                    .build();
+
+            Delivery delivery5 = Delivery.builder()
+                    .deliveryId("DEL-TEST005")
+                    .orderNumber("ORD-" + UUID.randomUUID().toString().substring(0, 8))
+                    .pickupAddress(Address.builder()
+                            .address("서울특별시 마포구 월드컵로 240")
+                            .detailAddress("홍대입구역 근처 음식점")
+                            .latitude(37.5567)
+                            .longitude(126.9225)
+                            .contactName("홍대맛집")
+                            .contactPhone("02-5678-9012")
+                            .build())
+                    .deliveryAddress(Address.builder()
+                            .address("서울특별시 마포구 서강로 100")
+                            .detailAddress("서강대학교 기숙사")
+                            .latitude(37.5508)
+                            .longitude(126.9406)
+                            .contactName("고객E")
+                            .contactPhone("010-5432-1098")
+                            .build())
+                    .rider(rider1)
+                    .status(DeliveryStatus.DELIVERED)
+                    .priority(Priority.NORMAL)
+                    .itemDescription("피자 2판 + 사이다")
+                    .weight(4.0)
+                    .quantity(1)
+                    .deliveryFee(4500)
+                    .requestedTime(LocalDateTime.now().minusHours(1))
+                    .estimatedPickupTime(LocalDateTime.now().minusMinutes(50))
+                    .estimatedDeliveryTime(LocalDateTime.now().minusMinutes(30))
+                    .actualDistance(2.1)
+                    .estimatedDistance(2.0)
+                    .build();
+
+            Delivery delivery6 = Delivery.builder()
+                    .deliveryId("DEL-TEST006")
+                    .orderNumber("ORD-" + UUID.randomUUID().toString().substring(0, 8))
+                    .pickupAddress(Address.builder()
+                            .address("서울특별시 종로구 종로 51")
+                            .detailAddress("종각역 백화점")
+                            .latitude(37.5695)
+                            .longitude(126.9826)
+                            .contactName("종로상점")
+                            .contactPhone("02-6789-0123")
+                            .build())
+                    .deliveryAddress(Address.builder()
+                            .address("서울특별시 성북구 동소문로 123")
+                            .detailAddress("성북구청 근처")
+                            .latitude(37.5894)
+                            .longitude(127.0167)
+                            .contactName("고객F")
+                            .contactPhone("010-4321-0987")
+                            .build())
+                    .status(DeliveryStatus.PENDING)
+                    .priority(Priority.LOW)
+                    .itemDescription("책 5권")
+                    .weight(2.5)
+                    .quantity(1)
+                    .deliveryFee(3000)
+                    .requestedTime(LocalDateTime.now().plusMinutes(30))
+                    .estimatedDeliveryTime(LocalDateTime.now().plusHours(2))
+                    .estimatedDistance(3.5)
+                    .build();
+
             deliveryRepository.save(delivery1);
             deliveryRepository.save(delivery2);
+            deliveryRepository.save(delivery3);
+            deliveryRepository.save(delivery4);
+            deliveryRepository.save(delivery5);
+            deliveryRepository.save(delivery6);
 
             log.info("Test data loaded successfully!");
             log.info("Created {} users, {} riders and {} deliveries", 
@@ -215,6 +346,14 @@ public class DataLoader {
             log.info("BackOffice: username=backoffice, password=backoffice123");
             log.info("Rider1: username=rider1, password=rider123");
             log.info("Rider2: username=rider2, password=rider123");
+            log.info("=".repeat(50));
+            log.info("Test Deliveries:");
+            log.info("DEL-TEST001: DELIVERING (rider1 - 김배달)");
+            log.info("DEL-TEST002: PENDING (긴급 - 노트북)");
+            log.info("DEL-TEST003: PENDING (초긴급 - 의료용품)");
+            log.info("DEL-TEST004: PICKED_UP (rider2 - 이퀵)");
+            log.info("DEL-TEST005: COMPLETED (rider1 - 완료됨)");
+            log.info("DEL-TEST006: PENDING (예약 - 책)");
             log.info("=".repeat(50));
         };
     }
