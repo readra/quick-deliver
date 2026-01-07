@@ -31,6 +31,7 @@ public class RiderService {
     private final RiderRepository riderRepository;
     private final DeliveryRepository deliveryRepository;
     private final WebSocketService webSocketService;
+    private final LocationSimulatorService locationSimulatorService;
 
     @Transactional
     public RiderResponse registerRider(RiderRegisterRequest request) {
@@ -106,10 +107,23 @@ public class RiderService {
         Rider rider = riderRepository.findByRiderId(riderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Rider not found"));
 
+        RiderStatus oldStatus = rider.getStatus();
         rider.setStatus(status);
         riderRepository.save(rider);
         
-        log.info("Rider {} status updated to {}", riderId, status);
+        // 배달 중으로 변경 시 경로 시뮬레이션 시작
+        if (status == RiderStatus.DELIVERING && oldStatus != RiderStatus.DELIVERING) {
+            locationSimulatorService.startRoute(riderId);
+            log.info("Started location simulation for rider {}", riderId);
+        }
+        
+        // 배달 중이 아닌 상태로 변경 시 경로 중지
+        if (status != RiderStatus.DELIVERING && oldStatus == RiderStatus.DELIVERING) {
+            locationSimulatorService.stopRoute(riderId);
+            log.info("Stopped location simulation for rider {}", riderId);
+        }
+        
+        log.info("Rider {} status updated from {} to {}", riderId, oldStatus, status);
     }
 
     public RiderDashboardResponse getRiderDashboard(String riderId) {

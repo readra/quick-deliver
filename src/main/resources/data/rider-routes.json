@@ -1,0 +1,44 @@
+{
+  "routes": [
+    {
+      "riderId": "RDR-TEST001",
+      "deliveryId": "DEL-TEST001",
+      "routeName": "강남 치킨 배달",
+      "waypoints": [
+        {"latitude": 37.5012, "longitude": 127.0396, "timestamp": 0, "description": "픽업 완료"},
+        {"latitude": 37.5006, "longitude": 127.0380, "timestamp": 60, "description": "테헤란로 이동 중"},
+        {"latitude": 37.5000, "longitude": 127.0360, "timestamp": 120, "description": "역삼역 통과"},
+        {"latitude": 37.4995, "longitude": 127.0340, "timestamp": 180, "description": "역삼로 진입"},
+        {"latitude": 37.4988, "longitude": 127.0320, "timestamp": 240, "description": "거의 도착"},
+        {"latitude": 37.4982, "longitude": 127.0300, "timestamp": 300, "description": "목적지 인근"},
+        {"latitude": 37.4979, "longitude": 127.0276, "timestamp": 360, "description": "배송 완료"}
+      ]
+    },
+    {
+      "riderId": "RDR-TEST002",
+      "deliveryId": "DEL-TEST004",
+      "routeName": "용산 서류 배달",
+      "waypoints": [
+        {"latitude": 37.5636, "longitude": 126.9826, "timestamp": 0, "description": "명동 픽업 완료"},
+        {"latitude": 37.5600, "longitude": 126.9800, "timestamp": 60, "description": "을지로 이동"},
+        {"latitude": 37.5550, "longitude": 126.9750, "timestamp": 120, "description": "시청 통과"},
+        {"latitude": 37.5480, "longitude": 126.9720, "timestamp": 180, "description": "남산터널"},
+        {"latitude": 37.5400, "longitude": 126.9690, "timestamp": 240, "description": "용산 진입"},
+        {"latitude": 37.5340, "longitude": 126.9660, "timestamp": 300, "description": "거의 도착"},
+        {"latitude": 37.5295, "longitude": 126.9645, "timestamp": 360, "description": "용산역 도착"}
+      ]
+    },
+    {
+      "riderId": "RDR-TEST001",
+      "deliveryId": "DEL-TEST005",
+      "routeName": "홍대 피자 배달 (완료)",
+      "waypoints": [
+        {"latitude": 37.5567, "longitude": 126.9225, "timestamp": 0, "description": "홍대 픽업"},
+        {"latitude": 37.5550, "longitude": 126.9250, "timestamp": 60, "description": "홍대입구역"},
+        {"latitude": 37.5530, "longitude": 126.9300, "timestamp": 120, "description": "서강대로"},
+        {"latitude": 37.5515, "longitude": 126.9350, "timestamp": 180, "description": "거의 도착"},
+        {"latitude": 37.5508, "longitude": 126.9406, "timestamp": 240, "description": "서강대 도착"}
+      ]
+    }
+  ]
+}
