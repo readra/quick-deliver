@@ -111,14 +111,14 @@ public class RiderService {
         rider.setStatus(status);
         riderRepository.save(rider);
         
-        // 배달 중으로 변경 시 경로 시뮬레이션 시작
-        if (status == RiderStatus.DELIVERING && oldStatus != RiderStatus.DELIVERING) {
+        // 배송 중으로 변경 시 경로 시뮬레이션 시작
+        if (status == RiderStatus.BUSY && oldStatus != RiderStatus.BUSY) {
             locationSimulatorService.startRoute(riderId);
             log.info("Started location simulation for rider {}", riderId);
         }
         
-        // 배달 중이 아닌 상태로 변경 시 경로 중지
-        if (status != RiderStatus.DELIVERING && oldStatus == RiderStatus.DELIVERING) {
+        // 배송 중이 아닌 상태로 변경 시 경로 중지
+        if (status != RiderStatus.BUSY && oldStatus == RiderStatus.BUSY) {
             locationSimulatorService.stopRoute(riderId);
             log.info("Stopped location simulation for rider {}", riderId);
         }

@@ -55,10 +55,10 @@ public class LocationSimulatorService {
             return;
         }
         
-        // DELIVERING 상태인 라이더들의 경로 활성화
+        // BUSY 상태인 라이더들의 경로 활성화
         for (RiderRoute route : routeData.getRoutes()) {
             Rider rider = riderRepository.findByRiderId(route.getRiderId()).orElse(null);
-            if (rider != null && rider.getStatus() == RiderStatus.DELIVERING) {
+            if (rider != null && rider.getStatus() == RiderStatus.BUSY) {
                 route.start();
                 activeRoutes.put(route.getRiderId(), route);
                 log.info("Started route simulation for rider: {} - {}", route.getRiderId(), route.getRouteName());
