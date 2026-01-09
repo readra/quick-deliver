@@ -30,7 +30,7 @@ public class LocationSimulatorService {
     private final SimpMessagingTemplate messagingTemplate;
     private final ObjectMapper objectMapper;
     
-    private Map<String, RiderRoute> activeRoutes = new HashMap<>();
+    private final Map<String, RiderRoute> activeRoutes = new HashMap<>();
     private RouteData routeData;
 
     @PostConstruct
