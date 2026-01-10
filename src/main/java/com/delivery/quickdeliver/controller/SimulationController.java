@@ -16,7 +16,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/simulation")
 @RequiredArgsConstructor
-@Tag(name = "Simulation API", description = "위치 시뮬레이션 관리 API (개발/테스트용)")
+@Tag(name = "Simulation API", description = "위치 시뮬레이션 관리 API (개발+테스트용)")
 public class SimulationController {
 
     private final LocationSimulatorService locationSimulatorService;
