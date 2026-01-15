@@ -119,7 +119,7 @@ public class DeliveryController {
     public ResponseEntity<ApiResponse<Void>> rateDelivery(
             @Parameter(description = "배송 ID") @PathVariable String deliveryId,
             @Parameter(description = "평점 (1-5)") @RequestParam Integer rating) {
-        log.info("Rating delivery {}: {} stars", deliveryId, rating);
+//        log.info("Rating delivery {}: {} stars", deliveryId, rating);
         
         // TODO: DeliveryService에 rateDelivery 메소드 추가 필요
         throw new UnsupportedOperationException("Not implemented yet");
