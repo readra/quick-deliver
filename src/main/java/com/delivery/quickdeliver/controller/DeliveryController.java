@@ -130,7 +130,7 @@ public class DeliveryController {
                description = "주문번호나 배송ID로 배송을 검색합니다.")
     public ResponseEntity<ApiResponse<DeliveryResponse>> searchDelivery(
             @Parameter(description = "주문번호 또는 배송ID") @RequestParam String query) {
-//        log.info("Searching delivery with query: {}", query);
+        log.info("Searching delivery with query: {}", query);
         
         // TODO: DeliveryService에 search 메소드 추가 필요
         throw new UnsupportedOperationException("Not implemented yet");
