@@ -115,7 +115,7 @@ public class DeliveryController {
     }
 
     @PostMapping("/{deliveryId}/rating")
-    @Operation(summary = "배송 평가", description = "완료된 배송에 대한 평가와 피드백을 등록합니다.")
+    @Operation(summary = "배송 평가", description = "완료된 배송에 대한 평가 및 피드백을 등록합니다.")
     public ResponseEntity<ApiResponse<Void>> rateDelivery(
             @Parameter(description = "배송 ID") @PathVariable String deliveryId,
             @Parameter(description = "평점 (1-5)") @RequestParam Integer rating) {
