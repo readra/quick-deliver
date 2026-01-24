@@ -127,7 +127,7 @@ public class DeliveryController {
 
     @GetMapping("/search")
     @Operation(summary = "배송 검색", 
-               description = "주문번호 또는 배송ID로 배송을 검색합니다.")
+               description = "주문번호 혹은 배송ID로 배송을 검색합니다.")
     public ResponseEntity<ApiResponse<DeliveryResponse>> searchDelivery(
             @Parameter(description = "주문번호 또는 배송ID") @RequestParam String query) {
         log.info("Searching delivery with query: {}", query);
