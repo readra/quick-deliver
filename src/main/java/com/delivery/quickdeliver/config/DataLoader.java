@@ -78,6 +78,7 @@ public class DataLoader {
                     .currentLatitude(37.5012)  // 픽업 지점에서 시작
                     .currentLongitude(127.0396)
                     .lastLocationUpdate(LocalDateTime.now())
+                    .shiftStartTime(LocalDateTime.now().minusHours(2))  // 2시간 전 근무 시작
                     .totalDeliveries(0)
                     .averageRating(5.0)
                     .totalDistance(0.0)
@@ -94,6 +95,7 @@ public class DataLoader {
                     .currentLatitude(37.5636)  // 명동 픽업 지점에서 시작
                     .currentLongitude(126.9826)
                     .lastLocationUpdate(LocalDateTime.now())
+                    .shiftStartTime(LocalDateTime.now().minusHours(1))  // 1시간 전 근무 시작
                     .totalDeliveries(0)
                     .averageRating(4.8)
                     .totalDistance(0.0)
@@ -104,9 +106,10 @@ public class DataLoader {
                     .name("박신속")
                     .phoneNumber("010-3456-7890")
                     .email("rider3@quickdeliver.com")
-                    .status(RiderStatus.OFFLINE)
+                    .status(RiderStatus.AVAILABLE)  // 대기 중
                     .vehicleType(VehicleType.CAR)
                     .vehicleNumber("56다7890")
+                    .shiftStartTime(LocalDateTime.now().minusMinutes(30))  // 30분 전 근무 시작
                     .totalDeliveries(0)
                     .averageRating(4.9)
                     .totalDistance(0.0)
@@ -347,11 +350,16 @@ public class DataLoader {
             log.info("Rider1: username=rider1, password=rider123");
             log.info("Rider2: username=rider2, password=rider123");
             log.info("=".repeat(50));
+            log.info("Test Riders:");
+            log.info("RDR-TEST001: 김배달 (BUSY, 근무중, 위치 시뮬레이션 자동 시작)");
+            log.info("RDR-TEST002: 이퀵 (BUSY, 근무중, 위치 시뮬레이션 자동 시작)");
+            log.info("RDR-TEST003: 박신속 (AVAILABLE, 근무중, 대기)");
+            log.info("=".repeat(50));
             log.info("Test Deliveries:");
-            log.info("DEL-TEST001: IN_TRANSIT (rider1 - 김배달, BUSY) - 위치 시뮬레이션 자동 시작");
+            log.info("DEL-TEST001: IN_TRANSIT (rider1 - 김배달)");
             log.info("DEL-TEST002: PENDING (긴급 - 노트북)");
             log.info("DEL-TEST003: PENDING (초긴급 - 의료용품)");
-            log.info("DEL-TEST004: PICKING_UP (rider2 - 이퀵, BUSY) - 위치 시뮬레이션 자동 시작");
+            log.info("DEL-TEST004: PICKING_UP (rider2 - 이퀵)");
             log.info("DEL-TEST005: DELIVERED (rider1 - 완료됨)");
             log.info("DEL-TEST006: PENDING (예약 - 책)");
             log.info("=".repeat(50));

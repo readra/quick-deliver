@@ -553,19 +553,26 @@
         // 통계 로드
         async function loadStats() {
             try {
-                const [allRiders, activeRiders, pendingDeliveries] = await Promise.all([
-                    apiCall('/riders/active'),
+                const [ridersResponse, pendingResponse] = await Promise.all([
                     apiCall('/riders/active'),
                     apiCall('/deliveries/pending')
                 ]);
 
-                document.getElementById('totalRiders').textContent = allRiders?.length || 0;
-                document.getElementById('activeRiders').textContent = 
-                    activeRiders?.filter(r => r.status !== 'OFFLINE').length || 0;
-                document.getElementById('pendingDeliveries').textContent = pendingDeliveries?.length || 0;
+                console.log('통계 API 응답:', { ridersResponse, pendingResponse });
+
+                // ApiResponse 구조 처리
+                const allRiders = ridersResponse?.data || ridersResponse || [];
+                const pendingDeliveries = pendingResponse?.data || pendingResponse || [];
+
+                console.log('파싱된 통계 데이터:', { allRiders, pendingDeliveries });
+
+                document.getElementById('totalRiders').textContent = allRiders.length || 0;
+                document.getElementById('activeRiders').textContent =
+                    allRiders.filter(r => r.status !== 'OFFLINE').length || 0;
+                document.getElementById('pendingDeliveries').textContent = pendingDeliveries.length || 0;
 
                 // 총 배송 수는 임시로 설정 (실제로는 별도 API 필요)
-                document.getElementById('totalDeliveries').textContent = '0';
+                document.getElementById('totalDeliveries').textContent = pendingDeliveries.length || 0;
 
             } catch (error) {
                 console.error('통계 로드 실패:', error);
@@ -575,23 +582,31 @@
         // 라이더 목록 로드
         async function loadRiders() {
             try {
-                allRidersData = await apiCall('/riders/active');
-                
-                if (allRidersData && allRidersData.length > 0) {
+                const response = await apiCall('/riders/active');
+                console.log('Riders API 응답:', response);
+
+                // ApiResponse 구조 처리
+                const ridersData = response?.data || response;
+                console.log('파싱된 라이더 데이터:', ridersData);
+
+                if (ridersData && Array.isArray(ridersData) && ridersData.length > 0) {
+                    allRidersData = ridersData;
                     renderRiders(allRidersData, 'riderList');
-                    
+
                     // 활성 라이더 필터링
                     const activeRiders = allRidersData.filter(r => r.status === 'AVAILABLE' || r.status === 'BUSY');
                     renderRiders(activeRiders, 'activeRiderList');
-                    
+
                     // 대기 라이더 필터링
                     const availableRiders = allRidersData.filter(r => r.status === 'AVAILABLE');
                     renderRiders(availableRiders, 'availableRiderList');
                 } else {
+                    console.warn('라이더 데이터가 비어있거나 배열이 아닙니다:', ridersData);
                     document.getElementById('riderList').innerHTML = '<div class="empty-state"><p>등록된 라이더가 없습니다</p></div>';
                 }
             } catch (error) {
                 console.error('라이더 목록 로드 실패:', error);
+                document.getElementById('riderList').innerHTML = '<div class="empty-state"><p>라이더 목록을 불러올 수 없습니다</p></div>';
             }
         }
 
@@ -609,9 +624,9 @@
                     <div class="rider-info">
                         <div class="rider-name">${rider.name || rider.riderId}</div>
                         <div class="rider-details">
-                            <span>📱 ${rider.phone || 'N/A'}</span>
+                            <span>📱 ${rider.phoneNumber || 'N/A'}</span>
                             <span>🚗 ${rider.vehicleType || 'N/A'}</span>
-                            <span>⭐ ${(rider.rating || 0).toFixed(1)}</span>
+                            <span>⭐ ${(rider.averageRating || 0).toFixed(1)}</span>
                         </div>
                     </div>
                     <span class="rider-status status-${(rider.status || 'OFFLINE').toLowerCase()}">
@@ -624,16 +639,24 @@
         // 배송 목록 로드
         async function loadDeliveries() {
             try {
-                const deliveries = await apiCall('/deliveries/pending');
-                
-                if (deliveries && deliveries.length > 0) {
-                    renderDeliveries(deliveries);
+                const response = await apiCall('/deliveries/pending');
+                console.log('Deliveries API 응답:', response);
+
+                // ApiResponse 구조 처리
+                const deliveriesData = response?.data || response;
+                console.log('파싱된 배송 데이터:', deliveriesData);
+
+                if (deliveriesData && Array.isArray(deliveriesData) && deliveriesData.length > 0) {
+                    renderDeliveries(deliveriesData);
                 } else {
-                    document.getElementById('deliveryList').innerHTML = 
+                    console.warn('배송 데이터가 비어있거나 배열이 아닙니다:', deliveriesData);
+                    document.getElementById('deliveryList').innerHTML =
                         '<div class="empty-state"><p>진행 중인 배송이 없습니다</p></div>';
                 }
             } catch (error) {
                 console.error('배송 목록 로드 실패:', error);
+                document.getElementById('deliveryList').innerHTML =
+                    '<div class="empty-state"><p>배송 목록을 불러올 수 없습니다</p></div>';
             }
         }
 
