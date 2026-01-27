@@ -6,6 +6,716 @@
     <title>실시간 배송 지도 - Quick Deliver</title>
     <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+    <!-- Kakao Map API는 동적으로 로드됩니다 -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: relative;
+            z-index: 1000;
+        }
+
+        .header h1 {
+            font-size: 1.5em;
+        }
+
+        .header .controls {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .btn-header {
+            background: rgba(255,255,255,0.2);
+            border: 2px solid white;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-header:hover {
+            background: white;
+            color: #667eea;
+        }
+
+        .map-container {
+            display: flex;
+            height: calc(100vh - 70px);
+        }
+
+        #map {
+            flex: 1;
+            position: relative;
+        }
+
+        .sidebar {
+            width: 350px;
+            background: white;
+            box-shadow: -2px 0 10px rgba(0,0,0,0.1);
+            overflow-y: auto;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            background: #f8f9fa;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        .sidebar-header h2 {
+            font-size: 1.3em;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .filter-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .filter-btn {
+            padding: 8px 12px;
+            border: 2px solid #e5e7eb;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85em;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .filter-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .rider-list {
+            padding: 15px;
+        }
+
+        .rider-card {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border-left: 4px solid #667eea;
+        }
+
+        .rider-card:hover {
+            background: #e9ecef;
+            transform: translateX(5px);
+        }
+
+        .rider-card.available {
+            border-left-color: #10b981;
+        }
+
+        .rider-card.busy {
+            border-left-color: #f59e0b;
+        }
+
+        .rider-card.offline {
+            border-left-color: #6b7280;
+            opacity: 0.6;
+        }
+
+        .rider-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .rider-name {
+            font-weight: 700;
+            color: #333;
+        }
+
+        .rider-status {
+            padding: 4px 10px;
+            border-radius: 10px;
+            font-size: 0.8em;
+            font-weight: 600;
+        }
+
+        .status-available { background: #d1fae5; color: #065f46; }
+        .status-busy { background: #fef3c7; color: #92400e; }
+        .status-offline { background: #e5e7eb; color: #4b5563; }
+
+        .rider-info {
+            font-size: 0.85em;
+            color: #666;
+        }
+
+        .connection-status {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            z-index: 100;
+            background: white;
+        }
+
+        .connection-status.connected {
+            background: #10b981;
+            color: white;
+        }
+
+        .connection-status.disconnected {
+            background: #ef4444;
+            color: white;
+        }
+
+        .pulse {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: white;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        .legend {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 100;
+        }
+
+        .legend-title {
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 6px 0;
+            font-size: 0.9em;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #999;
+        }
+
+        /* 커스텀 마커 스타일 */
+        .custom-marker {
+            background: white;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5em;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .custom-marker:hover {
+            transform: scale(1.2);
+        }
+
+        .marker-label {
+            position: absolute;
+            top: 45px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.75em;
+            font-weight: 600;
+            white-space: nowrap;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🗺️ 실시간 배송 지도</h1>
+        <div class="controls">
+            <button class="btn-header" onclick="window.location.href='/backoffice-dashboard.html'">← 대시보드</button>
+            <button class="btn-header" onclick="logout()">로그아웃</button>
+        </div>
+    </div>
+
+    <div class="map-container">
+        <div id="map">
+            <div class="connection-status disconnected" id="connectionStatus">
+                <div class="pulse"></div>
+                <span>연결 중...</span>
+            </div>
+
+            <div class="legend">
+                <div class="legend-title">범례</div>
+                <div class="legend-item">
+                    <span style="font-size: 1.5em;">🚴</span>
+                    <span>대기 중인 라이더</span>
+                </div>
+                <div class="legend-item">
+                    <span style="font-size: 1.5em;">🚴‍♂️</span>
+                    <span>배달 중인 라이더</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h2>라이더 목록</h2>
+                <div class="filter-buttons">
+                    <button class="filter-btn active" onclick="filterRiders('all')">전체</button>
+                    <button class="filter-btn" onclick="filterRiders('available')">대기</button>
+                    <button class="filter-btn" onclick="filterRiders('busy')">배달중</button>
+                </div>
+            </div>
+            <div class="rider-list" id="riderList">
+                <div class="empty-state">
+                    <p>라이더 정보를 불러오는 중...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:8080/api';
+        const WS_URL = 'http://localhost:8080/ws';
+
+        let map = null;
+        let stompClient = null;
+        let ridersData = new Map();
+        let markers = new Map(); // 라이더별 마커 저장
+        let currentFilter = 'all';
+        let selectedRider = null;
+
+        // 인증 확인
+        function checkAuth() {
+            const token = localStorage.getItem('jwt_token');
+            const userInfo = localStorage.getItem('user_info');
+
+            if (!token || !userInfo) {
+                window.location.href = '/login.html';
+                return null;
+            }
+
+            return { token, user: JSON.parse(userInfo) };
+        }
+
+        // 로그아웃
+        function logout() {
+            if (stompClient) {
+                stompClient.disconnect();
+            }
+            localStorage.removeItem('jwt_token');
+            localStorage.removeItem('user_info');
+            window.location.href = '/login.html';
+        }
+
+        // API 호출
+        async function apiCall(endpoint, method = 'GET', body = null) {
+            const auth = checkAuth();
+            if (!auth) return null;
+
+            const options = {
+                method,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${auth.token}`
+                }
+            };
+
+            if (body) {
+                options.body = JSON.stringify(body);
+            }
+
+            const response = await fetch(`${API_BASE_URL}${endpoint}`, options);
+
+            if (response.status === 401) {
+                logout();
+                return null;
+            }
+
+            if (!response.ok) {
+                throw new Error(`API 호출 실패: ${response.status}`);
+            }
+
+            return await response.json();
+        }
+
+        // Kakao Map 초기화
+        function initMap() {
+            const container = document.getElementById('map');
+            const options = {
+                center: new kakao.maps.LatLng(37.5665, 126.9780), // 서울시청 중심
+                level: 6 // 확대 레벨
+            };
+
+            map = new kakao.maps.Map(container, options);
+
+            // 지도 타입 컨트롤 추가
+            const mapTypeControl = new kakao.maps.MapTypeControl();
+            map.addControl(mapTypeControl, kakao.maps.ControlPosition.TOPRIGHT);
+
+            // 줌 컨트롤 추가
+            const zoomControl = new kakao.maps.ZoomControl();
+            map.addControl(zoomControl, kakao.maps.ControlPosition.RIGHT);
+
+            console.log('Kakao Map 초기화 완료');
+        }
+
+        // 커스텀 마커 생성
+        function createCustomMarker(rider) {
+            const icon = rider.status === 'BUSY' ? '🚴‍♂️' : '🚴';
+
+            // 커스텀 오버레이 내용
+            const content = document.createElement('div');
+            content.style.position = 'relative';
+            content.innerHTML = `
+                <div class="custom-marker">
+                    ${icon}
+                </div>
+                <div class="marker-label">${rider.name}</div>
+            `;
+
+            return content;
+        }
+
+        // 라이더 마커 업데이트
+        function updateRiderMarker(rider) {
+            if (!rider.latitude || !rider.longitude) {
+                console.warn('라이더 위치 정보 없음:', rider.riderId);
+                return;
+            }
+
+            const position = new kakao.maps.LatLng(rider.latitude, rider.longitude);
+
+            // 기존 마커가 있으면 제거
+            if (markers.has(rider.riderId)) {
+                markers.get(rider.riderId).setMap(null);
+            }
+
+            // 커스텀 오버레이로 마커 생성
+            const customOverlay = new kakao.maps.CustomOverlay({
+                position: position,
+                content: createCustomMarker(rider),
+                yAnchor: 1
+            });
+
+            customOverlay.setMap(map);
+            markers.set(rider.riderId, customOverlay);
+
+            // 클릭 이벤트
+            const markerElement = customOverlay.getContent();
+            markerElement.onclick = () => {
+                selectRider(rider.riderId);
+            };
+        }
+
+        // 모든 마커 업데이트
+        function updateAllMarkers() {
+            ridersData.forEach(rider => {
+                updateRiderMarker(rider);
+            });
+        }
+
+        // 라이더 데이터 로드
+        async function loadRiders() {
+            try {
+                const response = await apiCall('/riders/active');
+                console.log('Map - Riders API 응답:', response);
+
+                // ApiResponse 구조 처리
+                const ridersArray = response?.data || response || [];
+                console.log('Map - 파싱된 라이더 데이터:', ridersArray);
+
+                if (Array.isArray(ridersArray) && ridersArray.length > 0) {
+                    ridersArray.forEach(rider => {
+                        // currentLatitude, currentLongitude 사용
+                        const latitude = rider.currentLatitude;
+                        const longitude = rider.currentLongitude;
+
+                        ridersData.set(rider.riderId, {
+                            ...rider,
+                            latitude: latitude,
+                            longitude: longitude
+                        });
+                    });
+
+                    console.log('Map - 저장된 라이더 데이터:', Array.from(ridersData.values()));
+                    renderRiderList();
+                    updateAllMarkers();
+
+                    // 첫 로드 시 지도 중심을 첫 번째 라이더로 이동
+                    if (ridersArray.length > 0) {
+                        const firstRider = ridersArray[0];
+                        if (firstRider.currentLatitude && firstRider.currentLongitude) {
+                            const center = new kakao.maps.LatLng(
+                                firstRider.currentLatitude,
+                                firstRider.currentLongitude
+                            );
+                            map.setCenter(center);
+                        }
+                    }
+                } else {
+                    console.warn('Map - 라이더 데이터가 비어있거나 배열이 아닙니다');
+                }
+            } catch (error) {
+                console.error('라이더 데이터 로드 실패:', error);
+            }
+        }
+
+        // 라이더 목록 렌더링
+        function renderRiderList() {
+            const container = document.getElementById('riderList');
+            const riders = Array.from(ridersData.values());
+
+            console.log('렌더링할 라이더:', riders);
+
+            // 필터링
+            const filtered = riders.filter(rider => {
+                if (currentFilter === 'all') return true;
+                if (currentFilter === 'available') return rider.status === 'AVAILABLE';
+                if (currentFilter === 'busy') return rider.status === 'BUSY';
+                return false;
+            });
+
+            if (filtered.length === 0) {
+                container.innerHTML = '<div class="empty-state"><p>해당하는 라이더가 없습니다</p></div>';
+                return;
+            }
+
+            container.innerHTML = filtered.map(rider => `
+                <div class="rider-card ${(rider.status || 'offline').toLowerCase()}"
+                     onclick="selectRider('${rider.riderId}')">
+                    <div class="rider-header">
+                        <div class="rider-name">${rider.name || rider.riderId}</div>
+                        <div class="rider-status status-${(rider.status || 'offline').toLowerCase()}">
+                            ${getStatusText(rider.status)}
+                        </div>
+                    </div>
+                    <div class="rider-info">
+                        🚗 ${rider.vehicleType || 'N/A'} | ⭐ ${(rider.averageRating || 0).toFixed(1)}
+                    </div>
+                    ${rider.latitude && rider.longitude ?
+                        `<div class="rider-info">📍 ${rider.latitude.toFixed(4)}, ${rider.longitude.toFixed(4)}</div>` :
+                        '<div class="rider-info">📍 위치 정보 없음</div>'}
+                </div>
+            `).join('');
+        }
+
+        // 라이더 선택
+        function selectRider(riderId) {
+            selectedRider = riderId;
+            const rider = ridersData.get(riderId);
+
+            if (!rider || !rider.latitude || !rider.longitude) return;
+
+            // 지도 중심 이동
+            const position = new kakao.maps.LatLng(rider.latitude, rider.longitude);
+            map.setCenter(position);
+            map.setLevel(3); // 확대
+
+            // 인포윈도우 표시
+            const infowindow = new kakao.maps.InfoWindow({
+                content: `
+                    <div style="padding:10px; min-width:150px;">
+                        <div style="font-weight:700; margin-bottom:5px;">${rider.name || rider.riderId}</div>
+                        <div style="font-size:0.9em; color:#666;">
+                            🚗 ${rider.vehicleType || 'N/A'}<br>
+                            ⭐ ${(rider.averageRating || 0).toFixed(1)}<br>
+                            📱 ${rider.phoneNumber || 'N/A'}<br>
+                            상태: ${getStatusText(rider.status)}
+                        </div>
+                    </div>
+                `,
+                position: position
+            });
+
+            infowindow.open(map);
+
+            // 3초 후 인포윈도우 닫기
+            setTimeout(() => {
+                infowindow.close();
+            }, 3000);
+        }
+
+        // 필터 적용
+        function filterRiders(filter) {
+            currentFilter = filter;
+
+            // 버튼 활성화
+            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            renderRiderList();
+        }
+
+        // 상태 텍스트 변환
+        function getStatusText(status) {
+            const statusMap = {
+                'AVAILABLE': '대기중',
+                'BUSY': '배달중',
+                'OFFLINE': '오프라인'
+            };
+            return statusMap[status] || '알 수 없음';
+        }
+
+        // WebSocket 연결
+        function connectWebSocket() {
+            const socket = new SockJS(WS_URL);
+            stompClient = Stomp.over(socket);
+
+            stompClient.connect({}, function(frame) {
+                console.log('WebSocket 연결됨:', frame);
+                updateConnectionStatus(true);
+
+                // 라이더 위치 구독
+                stompClient.subscribe('/topic/monitoring/riders', function(message) {
+                    const data = JSON.parse(message.body);
+                    console.log('위치 업데이트:', data);
+
+                    // 라이더 위치 업데이트
+                    const rider = ridersData.get(data.riderId);
+                    if (rider) {
+                        rider.latitude = data.latitude;
+                        rider.longitude = data.longitude;
+                        ridersData.set(data.riderId, rider);
+
+                        // 마커 업데이트
+                        updateRiderMarker(rider);
+                        renderRiderList();
+                    }
+                });
+
+                // 배송 상태 구독
+                stompClient.subscribe('/topic/monitoring/deliveries', function(message) {
+                    loadRiders(); // 배송 상태 변경 시 라이더 정보 갱신
+                });
+
+            }, function(error) {
+                console.error('WebSocket 연결 실패:', error);
+                updateConnectionStatus(false);
+
+                // 재연결 시도
+                setTimeout(connectWebSocket, 5000);
+            });
+        }
+
+        // 연결 상태 업데이트
+        function updateConnectionStatus(connected) {
+            const statusDiv = document.getElementById('connectionStatus');
+            if (connected) {
+                statusDiv.className = 'connection-status connected';
+                statusDiv.querySelector('span').textContent = '실시간 연결';
+            } else {
+                statusDiv.className = 'connection-status disconnected';
+                statusDiv.querySelector('span').textContent = '연결 끊김';
+            }
+        }
+
+        // Kakao Map API 동적 로드
+        async function loadKakaoMapScript() {
+            try {
+                // 백엔드에서 API 키 가져오기
+                const response = await fetch(`${API_BASE_URL}/config/map`);
+                const config = await response.json();
+
+                console.log('Map API 설정 로드 완료');
+
+                // Kakao Map 스크립트 동적 로드
+                return new Promise((resolve, reject) => {
+                    const script = document.createElement('script');
+                    script.type = 'text/javascript';
+                    script.src = `//dapi.kakao.com/v2/maps/sdk.js?appkey=${config.apiKey}&autoload=false`;
+                    script.onload = () => {
+                        console.log('Kakao Map 스크립트 로드 완료');
+                        resolve();
+                    };
+                    script.onerror = () => {
+                        reject(new Error('Kakao Map 스크립트 로드 실패'));
+                    };
+                    document.head.appendChild(script);
+                });
+            } catch (error) {
+                console.error('API 키 로드 실패:', error);
+                throw error;
+            }
+        }
+
+        // 초기화
+        window.addEventListener('DOMContentLoaded', async () => {
+            const auth = checkAuth();
+            if (!auth) return;
+
+            try {
+                // 1. Kakao Map API 스크립트 로드
+                await loadKakaoMapScript();
+
+                // 2. Kakao Maps 라이브러리 로드
+                kakao.maps.load(() => {
+                    console.log('Kakao Maps 라이브러리 로드 완료');
+
+                    // 3. 지도 초기화
+                    initMap();
+
+                    // 4. 데이터 로드
+                    loadRiders();
+
+                    // 5. WebSocket 연결
+                    connectWebSocket();
+
+                    // 6. 주기적으로 라이더 정보 갱신 (30초마다)
+                    setInterval(loadRiders, 30000);
+                });
+            } catch (error) {
+                console.error('지도 초기화 실패:', error);
+                alert('지도를 로드할 수 없습니다. API 키 설정을 확인해주세요.');
+            }
+        });
+    </script>
+</body>
+</html>
     <style>
         * {
             margin: 0;
@@ -435,21 +1145,34 @@
         // 라이더 데이터 로드
         async function loadRiders() {
             try {
-                const riders = await apiCall('/riders/active');
-                
-                if (riders && riders.length > 0) {
-                    riders.forEach(rider => {
-                        // 기존 위치 정보 유지
+                const response = await apiCall('/riders/active');
+                console.log('Map - Riders API 응답:', response);
+
+                // ApiResponse 구조 처리
+                const ridersArray = response?.data || response || [];
+                console.log('Map - 파싱된 라이더 데이터:', ridersArray);
+
+                if (Array.isArray(ridersArray) && ridersArray.length > 0) {
+                    ridersArray.forEach(rider => {
+                        // 기존 위치 정보 유지 또는 API 응답의 위치 사용
                         const existing = ridersData.get(rider.riderId);
-                        if (existing) {
-                            rider.latitude = existing.latitude || rider.latitude;
-                            rider.longitude = existing.longitude || rider.longitude;
-                        }
-                        ridersData.set(rider.riderId, rider);
+
+                        // currentLatitude, currentLongitude 필드 사용
+                        const latitude = rider.currentLatitude || (existing && existing.latitude);
+                        const longitude = rider.currentLongitude || (existing && existing.longitude);
+
+                        ridersData.set(rider.riderId, {
+                            ...rider,
+                            latitude: latitude,
+                            longitude: longitude
+                        });
                     });
-                    
+
+                    console.log('Map - 저장된 라이더 데이터:', Array.from(ridersData.values()));
                     renderRiderList();
                     renderMap();
+                } else {
+                    console.warn('Map - 라이더 데이터가 비어있거나 배열이 아닙니다');
                 }
             } catch (error) {
                 console.error('라이더 데이터 로드 실패:', error);
@@ -461,6 +1184,8 @@
             const container = document.getElementById('riderList');
             const riders = Array.from(ridersData.values());
             
+            console.log('렌더링할 라이더:', riders);
+
             // 필터링
             const filtered = riders.filter(rider => {
                 if (currentFilter === 'all') return true;
@@ -475,7 +1200,7 @@
             }
 
             container.innerHTML = filtered.map(rider => `
-                <div class="rider-card ${(rider.status || 'offline').toLowerCase()}" 
+                <div class="rider-card ${(rider.status || 'offline').toLowerCase()}"
                      onclick="selectRider('${rider.riderId}')">
                     <div class="rider-header">
                         <div class="rider-name">${rider.name || rider.riderId}</div>
@@ -484,7 +1209,7 @@
                         </div>
                     </div>
                     <div class="rider-info">
-                        🚗 ${rider.vehicleType || 'N/A'} | ⭐ ${(rider.rating || 0).toFixed(1)}
+                        🚗 ${rider.vehicleType || 'N/A'} | ⭐ ${(rider.averageRating || 0).toFixed(1)}
                     </div>
                     ${rider.latitude && rider.longitude ? 
                         `<div class="rider-info">📍 위치: ${rider.latitude.toFixed(4)}, ${rider.longitude.toFixed(4)}</div>` : 
@@ -558,8 +1283,8 @@
                 popup.innerHTML = `
                     <div class="popup-header">${rider.name || rider.riderId}</div>
                     <div class="popup-info">🚗 ${rider.vehicleType || 'N/A'}</div>
-                    <div class="popup-info">⭐ 평점: ${(rider.rating || 0).toFixed(1)}</div>
-                    <div class="popup-info">📱 ${rider.phone || 'N/A'}</div>
+                    <div class="popup-info">⭐ 평점: ${(rider.averageRating || 0).toFixed(1)}</div>
+                    <div class="popup-info">📱 ${rider.phoneNumber || 'N/A'}</div>
                     <div class="popup-info">📍 ${rider.latitude?.toFixed(4)}, ${rider.longitude?.toFixed(4)}</div>
                     <div class="popup-info">상태: ${getStatusText(rider.status)}</div>
                 `;

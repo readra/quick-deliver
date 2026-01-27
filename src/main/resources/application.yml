@@ -43,6 +43,11 @@ springdoc:
 jwt:
   secret: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970 #FIXME
   expiration: 86400000 # 24 hours
+
+# Kakao Map API
+kakao:
+  map:
+    api-key: ${KAKAO_MAP_API_KEY:YOUR_KAKAO_API_KEY} # 환경변수 또는 기본값
   
 logging:
   level:
