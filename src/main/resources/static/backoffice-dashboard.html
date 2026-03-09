@@ -671,10 +671,10 @@
                         <span class="delivery-status status-${delivery.status.toLowerCase()}">${getStatusText(delivery.status)}</span>
                     </div>
                     <div class="delivery-info">
-                        📍 픽업: ${delivery.pickupAddress || '주소 정보 없음'}
+                        📍 픽업: ${delivery.pickupAddress?.address || '주소 정보 없음'}
                     </div>
                     <div class="delivery-info">
-                        📍 배송: ${delivery.deliveryAddress || '주소 정보 없음'}
+                        📍 배송: ${delivery.deliveryAddress?.address || '주소 정보 없음'}
                     </div>
                     <div class="delivery-info">
                         🚴 라이더: ${delivery.riderName || '미배정'}
