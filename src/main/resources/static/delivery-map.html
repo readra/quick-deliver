@@ -169,6 +169,37 @@
             color: #666;
         }
 
+        .delivery-route {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px dashed #e5e7eb;
+        }
+
+        .delivery-route-item {
+            font-size: 0.82em;
+            color: #555;
+            margin: 4px 0;
+            display: flex;
+            align-items: flex-start;
+            gap: 5px;
+            line-height: 1.4;
+        }
+
+        .delivery-route-item .route-label {
+            flex-shrink: 0;
+        }
+
+        .delivery-route-badge {
+            display: inline-block;
+            padding: 2px 7px;
+            border-radius: 8px;
+            font-size: 0.75em;
+            font-weight: 600;
+            background: #fef3c7;
+            color: #92400e;
+            margin-bottom: 4px;
+        }
+
         .connection-status {
             position: absolute;
             top: 20px;
@@ -540,6 +571,18 @@
                     ${rider.latitude && rider.longitude ?
                         `<div class="rider-info">📍 ${rider.latitude.toFixed(4)}, ${rider.longitude.toFixed(4)}</div>` :
                         '<div class="rider-info">📍 위치 정보 없음</div>'}
+                    ${rider.currentDelivery ? `
+                    <div class="delivery-route">
+                        <span class="delivery-route-badge">🚚 ${getStatusText(rider.currentDelivery.status)}</span>
+                        <div class="delivery-route-item">
+                            <span class="route-label">🏪 픽업</span>
+                            <span>${rider.currentDelivery.pickupAddress || '주소 정보 없음'}</span>
+                        </div>
+                        <div class="delivery-route-item">
+                            <span class="route-label">🏠 배송</span>
+                            <span>${rider.currentDelivery.deliveryAddress || '주소 정보 없음'}</span>
+                        </div>
+                    </div>` : ''}
                 </div>
             `).join('');
         }
@@ -557,16 +600,31 @@
             map.setLevel(3); // 확대
 
             // 인포윈도우 표시
+            const deliveryRouteHtml = rider.currentDelivery ? `
+                <div style="margin-top:8px; padding-top:8px; border-top:1px dashed #e5e7eb;">
+                    <div style="font-size:0.8em; font-weight:600; color:#f59e0b; margin-bottom:4px;">
+                        🚚 ${getStatusText(rider.currentDelivery.status)}
+                    </div>
+                    <div style="font-size:0.82em; color:#444; margin:3px 0;">
+                        🏪 <b>픽업</b><br>
+                        <span style="padding-left:18px;">${rider.currentDelivery.pickupAddress || '정보 없음'}</span>
+                    </div>
+                    <div style="font-size:0.82em; color:#444; margin:3px 0;">
+                        🏠 <b>배송</b><br>
+                        <span style="padding-left:18px;">${rider.currentDelivery.deliveryAddress || '정보 없음'}</span>
+                    </div>
+                </div>` : '';
+
             const infowindow = new kakao.maps.InfoWindow({
                 content: `
-                    <div style="padding:10px; min-width:150px;">
-                        <div style="font-weight:700; margin-bottom:5px;">${rider.name || rider.riderId}</div>
+                    <div style="padding:12px; min-width:200px; max-width:260px;">
+                        <div style="font-weight:700; font-size:1em; margin-bottom:6px;">${rider.name || rider.riderId}</div>
                         <div style="font-size:0.9em; color:#666;">
-                            🚗 ${rider.vehicleType || 'N/A'}<br>
-                            ⭐ ${(rider.averageRating || 0).toFixed(1)}<br>
+                            🚗 ${rider.vehicleType || 'N/A'}&nbsp;&nbsp;⭐ ${(rider.averageRating || 0).toFixed(1)}<br>
                             📱 ${rider.phoneNumber || 'N/A'}<br>
                             상태: ${getStatusText(rider.status)}
                         </div>
+                        ${deliveryRouteHtml}
                     </div>
                 `,
                 position: position
@@ -596,9 +654,15 @@
             const statusMap = {
                 'AVAILABLE': '대기중',
                 'BUSY': '배달중',
-                'OFFLINE': '오프라인'
+                'OFFLINE': '오프라인',
+                'ASSIGNED': '배정됨',
+                'PICKING_UP': '픽업중',
+                'IN_TRANSIT': '배송중',
+                'DELIVERED': '배송완료',
+                'CANCELLED': '취소',
+                'FAILED': '실패'
             };
-            return statusMap[status] || '알 수 없음';
+            return statusMap[status] || status;
         }
 
         // WebSocket 연결
@@ -878,6 +942,37 @@
         .rider-info {
             font-size: 0.85em;
             color: #666;
+        }
+
+        .delivery-route {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px dashed #e5e7eb;
+        }
+
+        .delivery-route-item {
+            font-size: 0.82em;
+            color: #555;
+            margin: 4px 0;
+            display: flex;
+            align-items: flex-start;
+            gap: 5px;
+            line-height: 1.4;
+        }
+
+        .delivery-route-item .route-label {
+            flex-shrink: 0;
+        }
+
+        .delivery-route-badge {
+            display: inline-block;
+            padding: 2px 7px;
+            border-radius: 8px;
+            font-size: 0.75em;
+            font-weight: 600;
+            background: #fef3c7;
+            color: #92400e;
+            margin-bottom: 4px;
         }
 
         /* 지도 마커 */
@@ -1315,9 +1410,15 @@
             const statusMap = {
                 'AVAILABLE': '대기중',
                 'BUSY': '배달중',
-                'OFFLINE': '오프라인'
+                'OFFLINE': '오프라인',
+                'ASSIGNED': '배정됨',
+                'PICKING_UP': '픽업중',
+                'IN_TRANSIT': '배송중',
+                'DELIVERED': '배송완료',
+                'CANCELLED': '취소',
+                'FAILED': '실패'
             };
-            return statusMap[status] || '알 수 없음';
+            return statusMap[status] || status;
         }
 
         // WebSocket 연결
