@@ -55,4 +55,12 @@ public interface DeliveryRepository extends JpaRepository<Delivery, Long> {
             "FROM deliveries d WHERE d.rider_id = :#{#rider.id} AND d.status = 'DELIVERED'", 
             nativeQuery = true)
     Double getAverageDeliveryTimeByRider(@Param("rider") Rider rider);
+
+    // 라이더의 현재 진행 중인 배송 조회 (ASSIGNED, PICKING_UP, IN_TRANSIT)
+    @Query("SELECT d FROM Delivery d WHERE d.rider.riderId = :riderId " +
+            "AND d.status IN (com.delivery.quickdeliver.domain.enums.DeliveryStatus.ASSIGNED, " +
+            "com.delivery.quickdeliver.domain.enums.DeliveryStatus.PICKING_UP, " +
+            "com.delivery.quickdeliver.domain.enums.DeliveryStatus.IN_TRANSIT) " +
+            "ORDER BY d.requestedTime DESC")
+    List<Delivery> findActiveDeliveriesByRiderId(@Param("riderId") String riderId);
 }

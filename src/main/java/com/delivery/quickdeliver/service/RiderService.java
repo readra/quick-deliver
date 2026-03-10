@@ -162,7 +162,25 @@ public class RiderService {
 
     public List<RiderResponse> getActiveRiders() {
         return riderRepository.findActiveRiders().stream()
-                .map(RiderResponse::from)
+                .map(rider -> {
+                    RiderResponse response = RiderResponse.from(rider);
+                    if (rider.getStatus() == RiderStatus.BUSY) {
+                        List<com.delivery.quickdeliver.domain.entity.Delivery> activeDeliveries =
+                                deliveryRepository.findActiveDeliveriesByRiderId(rider.getRiderId());
+                        if (!activeDeliveries.isEmpty()) {
+                            com.delivery.quickdeliver.domain.entity.Delivery delivery = activeDeliveries.get(0);
+                            response.setCurrentDelivery(RiderResponse.CurrentDeliveryInfo.builder()
+                                    .deliveryId(delivery.getDeliveryId())
+                                    .pickupAddress(delivery.getPickupAddress() != null
+                                            ? delivery.getPickupAddress().getAddress() : null)
+                                    .deliveryAddress(delivery.getDeliveryAddress() != null
+                                            ? delivery.getDeliveryAddress().getAddress() : null)
+                                    .status(delivery.getStatus().name())
+                                    .build());
+                        }
+                    }
+                    return response;
+                })
                 .collect(Collectors.toList());
     }
 

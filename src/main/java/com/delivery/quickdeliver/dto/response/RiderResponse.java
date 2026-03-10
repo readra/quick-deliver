@@ -28,6 +28,19 @@ public class RiderResponse {
     private Integer totalDeliveries;
     private Double averageRating;
     private LocalDateTime shiftStartTime;
+    private CurrentDeliveryInfo currentDelivery;
+
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class CurrentDeliveryInfo {
+        private String deliveryId;
+        private String pickupAddress;
+        private String deliveryAddress;
+        private String status;
+    }
 
     public static RiderResponse from(Rider rider) {
         return RiderResponse.builder()
