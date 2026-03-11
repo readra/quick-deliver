@@ -315,6 +315,7 @@
     <div class="header">
         <h1>🚀 Quick Deliver - 라이더 대시보드</h1>
         <div class="user-info">
+            <span id="gpsIndicator" style="font-size:0.82em; padding:5px 10px; border-radius:12px; background:rgba(255,255,255,0.15);">📍 GPS 대기</span>
             <span id="riderName">라이더</span>
             <span id="riderStatus" class="status-badge status-offline">오프라인</span>
             <button class="btn-logout" onclick="logout()">로그아웃</button>
@@ -399,6 +400,7 @@
         let riderInfo = null;
         let workStartTime = null;
         let workTimer = null;
+        let gpsWatchId = null;
 
         // 인증 확인
         function checkAuth() {
@@ -422,6 +424,7 @@
 
         // 로그아웃
         function logout() {
+            stopLocationTracking();
             if (stompClient) {
                 stompClient.disconnect();
             }
@@ -484,6 +487,10 @@
                     if (rider) {
                         riderInfo = rider;
                         updateRiderStatus(rider.status);
+                        // 이미 출근 중이면 GPS 추적 즉시 시작
+                        if (rider.status === 'AVAILABLE' || rider.status === 'BUSY') {
+                            startLocationTracking();
+                        }
                     }
                 } else {
                     alert('라이더 정보를 찾을 수 없습니다.');
@@ -656,6 +663,7 @@
                 document.getElementById('btnBusy').disabled = false;
                 
                 await setStatus('AVAILABLE');
+                startLocationTracking();
             } catch (error) {
                 alert('출근 처리 실패: ' + error.message);
             }
@@ -668,7 +676,8 @@
             try {
                 await apiCall(`/riders/${riderId}/shift/end`, 'POST');
                 stopWorkTimer();
-                
+                stopLocationTracking();
+
                 document.getElementById('btnStartShift').disabled = false;
                 document.getElementById('btnEndShift').disabled = true;
                 document.getElementById('btnAvailable').disabled = true;
@@ -762,34 +771,81 @@
             }
         }
 
-        // 위치 업데이트 (5초마다)
-        function startLocationUpdates() {
+        // GPS 실시간 추적 시작 (watchPosition 기반)
+        function startLocationTracking() {
             if (!riderId) return;
 
-            setInterval(async () => {
-                if (navigator.geolocation && riderInfo && riderInfo.status !== 'OFFLINE') {
-                    navigator.geolocation.getCurrentPosition(async (position) => {
-                        const location = {
-                            latitude: position.coords.latitude,
-                            longitude: position.coords.longitude
-                        };
+            if (!navigator.geolocation) {
+                updateGpsStatus('unsupported');
+                return;
+            }
 
-                        try {
-                            await apiCall(`/riders/${riderId}/location`, 'PUT', location);
-                            
-                            // WebSocket으로도 전송
-                            if (stompClient && stompClient.connected) {
-                                stompClient.send("/app/rider/location", {}, JSON.stringify({
-                                    riderId,
-                                    ...location
-                                }));
-                            }
-                        } catch (error) {
-                            console.error('위치 업데이트 실패:', error);
-                        }
-                    });
+            // 이미 추적 중이면 먼저 중지
+            stopLocationTracking();
+
+            updateGpsStatus('acquiring');
+
+            gpsWatchId = navigator.geolocation.watchPosition(
+                (position) => {
+                    updateGpsStatus('active');
+
+                    if (!stompClient || !stompClient.connected) return;
+
+                    const auth = checkAuth();
+                    if (!auth) return;
+
+                    stompClient.send('/app/rider/location', {}, JSON.stringify({
+                        riderId,
+                        name: riderInfo?.name || auth.user.name || auth.user.username,
+                        status: riderInfo?.status || 'AVAILABLE',
+                        latitude: position.coords.latitude,
+                        longitude: position.coords.longitude,
+                        accuracy: position.coords.accuracy,
+                        timestamp: position.timestamp
+                    }));
+                },
+                (error) => {
+                    const messages = {
+                        1: 'GPS 권한이 거부되었습니다',
+                        2: 'GPS 위치를 찾을 수 없습니다',
+                        3: 'GPS 응답 시간이 초과되었습니다'
+                    };
+                    console.error('GPS 오류:', messages[error.code] || error.message);
+                    updateGpsStatus('error');
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 3000
                 }
-            }, 5000);
+            );
+        }
+
+        // GPS 추적 중지
+        function stopLocationTracking() {
+            if (gpsWatchId !== null) {
+                navigator.geolocation.clearWatch(gpsWatchId);
+                gpsWatchId = null;
+                updateGpsStatus('stopped');
+            }
+        }
+
+        // GPS 상태 인디케이터 업데이트
+        function updateGpsStatus(state) {
+            const indicator = document.getElementById('gpsIndicator');
+            if (!indicator) return;
+
+            const configs = {
+                acquiring:   { text: '📡 GPS 연결 중...', color: '#fbbf24' },
+                active:      { text: '📍 GPS 추적 중',    color: '#6ee7b7' },
+                error:       { text: '⚠️ GPS 오류',       color: '#fca5a5' },
+                stopped:     { text: '📍 GPS 정지',        color: 'rgba(255,255,255,0.5)' },
+                unsupported: { text: '🚫 GPS 미지원',      color: '#fca5a5' }
+            };
+
+            const config = configs[state] || configs.stopped;
+            indicator.textContent = config.text;
+            indicator.style.color = config.color;
         }
 
         // 초기화
@@ -799,7 +855,6 @@
 
             await loadRiderInfo();
             connectWebSocket();
-            startLocationUpdates();
 
             // 주기적으로 데이터 새로고침
             setInterval(() => {
