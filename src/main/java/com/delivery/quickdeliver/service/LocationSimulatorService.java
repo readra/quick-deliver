@@ -24,6 +24,7 @@ import java.util.Map;
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@org.springframework.context.annotation.Profile("dev")
 public class LocationSimulatorService {
 
     private final RiderRepository riderRepository;

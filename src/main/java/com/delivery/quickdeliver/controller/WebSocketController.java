@@ -1,14 +1,18 @@
 package com.delivery.quickdeliver.controller;
 
+import com.delivery.quickdeliver.domain.entity.Rider;
+import com.delivery.quickdeliver.repository.RiderRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
-import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.Map;
 
 @Slf4j
@@ -17,16 +21,54 @@ import java.util.Map;
 public class WebSocketController {
 
     private final SimpMessagingTemplate messagingTemplate;
+    private final RiderRepository riderRepository;
 
     /**
-     * 라이더 위치 업데이트 수신
-     * /app/rider/location 으로 메시지를 보내면 /topic/monitoring/riders 로 브로드캐스트
+     * 라이더 위치 업데이트 수신 → DB 저장 + 관제 브로드캐스트
+     * 라이더 앱: /app/rider/location 으로 전송
+     * 관제 센터: /topic/monitoring/riders 로 수신
      */
     @MessageMapping("/rider/location")
-    @SendTo("/topic/monitoring/riders")
-    public Map<String, Object> handleRiderLocation(@Payload Map<String, Object> location) {
-        log.debug("Received rider location update: {}", location);
-        return location;
+    @Transactional
+    public void handleRiderLocation(@Payload Map<String, Object> payload) {
+        String riderId = (String) payload.get("riderId");
+        if (riderId == null) {
+            log.warn("위치 업데이트 수신: riderId 없음");
+            return;
+        }
+
+        Double latitude  = toDouble(payload.get("latitude"));
+        Double longitude = toDouble(payload.get("longitude"));
+        if (latitude == null || longitude == null) {
+            log.warn("위치 업데이트 수신: 좌표 없음 riderId={}", riderId);
+            return;
+        }
+
+        // DB 저장
+        Rider rider = riderRepository.findByRiderId(riderId).orElse(null);
+        if (rider == null) {
+            log.warn("위치 업데이트 수신: 존재하지 않는 라이더 riderId={}", riderId);
+            return;
+        }
+
+        rider.setCurrentLatitude(latitude);
+        rider.setCurrentLongitude(longitude);
+        rider.setLastLocationUpdate(LocalDateTime.now());
+        riderRepository.save(rider);
+
+        // 관제 지도에 필요한 데이터를 enriched 형태로 브로드캐스트
+        Map<String, Object> broadcast = new HashMap<>();
+        broadcast.put("riderId", riderId);
+        broadcast.put("name", rider.getName());
+        broadcast.put("status", rider.getStatus().name());
+        broadcast.put("vehicleType", rider.getVehicleType() != null ? rider.getVehicleType().name() : null);
+        broadcast.put("latitude", latitude);
+        broadcast.put("longitude", longitude);
+        broadcast.put("timestamp", System.currentTimeMillis());
+
+        messagingTemplate.convertAndSend("/topic/monitoring/riders", broadcast);
+
+        log.debug("위치 업데이트 처리 완료: {} ({}, {})", riderId, latitude, longitude);
     }
 
     /**
@@ -88,6 +130,17 @@ public class WebSocketController {
                 "/queue/urgent",
                 Map.of("type", "URGENT", "message", urgentMessage, "timestamp", System.currentTimeMillis())
         );
+    }
+
+    /**
+     * Double 변환 헬퍼 (WebSocket payload는 Number 또는 String으로 올 수 있음)
+     */
+    private Double toDouble(Object value) {
+        if (value instanceof Number) return ((Number) value).doubleValue();
+        if (value instanceof String) {
+            try { return Double.parseDouble((String) value); } catch (NumberFormatException ignored) {}
+        }
+        return null;
     }
 
     /**
