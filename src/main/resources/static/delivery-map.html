@@ -301,6 +301,51 @@
             white-space: nowrap;
             box-shadow: 0 2px 4px rgba(0,0,0,0.2);
         }
+
+        /* 픽업지 / 배달지 핀 */
+        .delivery-pin {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .delivery-pin-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 50% 50% 50% 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1em;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.3);
+            transform: rotate(-45deg);
+        }
+
+        .delivery-pin-icon span {
+            transform: rotate(45deg);
+        }
+
+        .pickup-pin .delivery-pin-icon  { background: #3b82f6; }
+        .dropoff-pin .delivery-pin-icon { background: #ef4444; }
+
+        .delivery-pin-label {
+            margin-top: 6px;
+            background: white;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.72em;
+            font-weight: 700;
+            white-space: nowrap;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            max-width: 140px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .pickup-pin .delivery-pin-label  { color: #1d4ed8; border-left: 3px solid #3b82f6; }
+        .dropoff-pin .delivery-pin-label { color: #b91c1c; border-left: 3px solid #ef4444; }
     </style>
 </head>
 <body>
@@ -329,6 +374,14 @@
                     <span style="font-size: 1.5em;">🚴‍♂️</span>
                     <span>배달 중인 라이더</span>
                 </div>
+                <div class="legend-item">
+                    <span style="font-size: 1.3em; color:#3b82f6;">🏪</span>
+                    <span>픽업지</span>
+                </div>
+                <div class="legend-item">
+                    <span style="font-size: 1.3em; color:#ef4444;">🏠</span>
+                    <span>배달지</span>
+                </div>
             </div>
         </div>
 
@@ -356,7 +409,9 @@
         let map = null;
         let stompClient = null;
         let ridersData = new Map();
-        let markers = new Map(); // 라이더별 마커 저장
+        let markers = new Map();       // 라이더별 마커
+        let deliveryOverlays = [];     // 현재 표시 중인 픽업지/배달지 핀
+        let deliveryPolyline = null;   // 현재 표시 중인 경로 선
         let currentFilter = 'all';
         let selectedRider = null;
 
@@ -587,6 +642,88 @@
             `).join('');
         }
 
+        // 기존 픽업지/배달지 핀 및 경로 선 제거
+        function clearDeliveryOverlays() {
+            deliveryOverlays.forEach(overlay => overlay.setMap(null));
+            deliveryOverlays = [];
+            if (deliveryPolyline) {
+                deliveryPolyline.setMap(null);
+                deliveryPolyline = null;
+            }
+        }
+
+        // 픽업지/배달지 핀 생성
+        function createDeliveryPin(type, address) {
+            const isPick = type === 'pickup';
+            const div = document.createElement('div');
+            div.className = `delivery-pin ${isPick ? 'pickup-pin' : 'dropoff-pin'}`;
+            div.innerHTML = `
+                <div class="delivery-pin-icon"><span>${isPick ? '🏪' : '🏠'}</span></div>
+                <div class="delivery-pin-label">${isPick ? '픽업' : '배달'}: ${address || ''}</div>
+            `;
+            return div;
+        }
+
+        // 배달 경로 핀 + Polyline 표시
+        function showDeliveryRoute(rider) {
+            clearDeliveryOverlays();
+
+            const cd = rider.currentDelivery;
+            if (!cd) return;
+
+            const pathPoints = [];
+
+            // 라이더 현재 위치를 경로 시작점으로
+            if (rider.latitude && rider.longitude) {
+                pathPoints.push(new kakao.maps.LatLng(rider.latitude, rider.longitude));
+            }
+
+            // 픽업지 핀
+            if (cd.pickupLatitude && cd.pickupLongitude) {
+                const pickupPos = new kakao.maps.LatLng(cd.pickupLatitude, cd.pickupLongitude);
+                const pickupOverlay = new kakao.maps.CustomOverlay({
+                    position: pickupPos,
+                    content: createDeliveryPin('pickup', cd.pickupAddress),
+                    yAnchor: 1.1
+                });
+                pickupOverlay.setMap(map);
+                deliveryOverlays.push(pickupOverlay);
+                pathPoints.push(pickupPos);
+            }
+
+            // 배달지 핀
+            if (cd.deliveryLatitude && cd.deliveryLongitude) {
+                const dropoffPos = new kakao.maps.LatLng(cd.deliveryLatitude, cd.deliveryLongitude);
+                const dropoffOverlay = new kakao.maps.CustomOverlay({
+                    position: dropoffPos,
+                    content: createDeliveryPin('dropoff', cd.deliveryAddress),
+                    yAnchor: 1.1
+                });
+                dropoffOverlay.setMap(map);
+                deliveryOverlays.push(dropoffOverlay);
+                pathPoints.push(dropoffPos);
+            }
+
+            // 경로 점선 (라이더 → 픽업지 → 배달지)
+            if (pathPoints.length >= 2) {
+                deliveryPolyline = new kakao.maps.Polyline({
+                    path: pathPoints,
+                    strokeWeight: 3,
+                    strokeColor: '#667eea',
+                    strokeOpacity: 0.7,
+                    strokeStyle: 'dashed'
+                });
+                deliveryPolyline.setMap(map);
+            }
+
+            // 세 지점이 모두 보이도록 지도 범위 조정
+            if (pathPoints.length >= 2) {
+                const bounds = new kakao.maps.LatLngBounds();
+                pathPoints.forEach(p => bounds.extend(p));
+                map.setBounds(bounds, 60); // 60px 여백
+            }
+        }
+
         // 라이더 선택
         function selectRider(riderId) {
             selectedRider = riderId;
@@ -594,12 +731,17 @@
 
             if (!rider || !rider.latitude || !rider.longitude) return;
 
-            // 지도 중심 이동
-            const position = new kakao.maps.LatLng(rider.latitude, rider.longitude);
-            map.setCenter(position);
-            map.setLevel(3); // 확대
+            // 배달 경로 핀 + 선 표시 (배달 중인 경우)
+            showDeliveryRoute(rider);
+
+            // 배달 중이 아닌 경우에만 중심 이동 (배달 중은 setBounds가 처리)
+            if (!rider.currentDelivery) {
+                map.setCenter(new kakao.maps.LatLng(rider.latitude, rider.longitude));
+                map.setLevel(3);
+            }
 
             // 인포윈도우 표시
+            const position = new kakao.maps.LatLng(rider.latitude, rider.longitude);
             const deliveryRouteHtml = rider.currentDelivery ? `
                 <div style="margin-top:8px; padding-top:8px; border-top:1px dashed #e5e7eb;">
                     <div style="font-size:0.8em; font-weight:600; color:#f59e0b; margin-bottom:4px;">
@@ -610,7 +752,7 @@
                         <span style="padding-left:18px;">${rider.currentDelivery.pickupAddress || '정보 없음'}</span>
                     </div>
                     <div style="font-size:0.82em; color:#444; margin:3px 0;">
-                        🏠 <b>배송</b><br>
+                        🏠 <b>배달</b><br>
                         <span style="padding-left:18px;">${rider.currentDelivery.deliveryAddress || '정보 없음'}</span>
                     </div>
                 </div>` : '';
@@ -631,11 +773,7 @@
             });
 
             infowindow.open(map);
-
-            // 3초 후 인포윈도우 닫기
-            setTimeout(() => {
-                infowindow.close();
-            }, 3000);
+            setTimeout(() => infowindow.close(), 4000);
         }
 
         // 필터 적용
