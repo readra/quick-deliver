@@ -177,8 +177,16 @@ public class RiderService {
                                     .deliveryId(delivery.getDeliveryId())
                                     .pickupAddress(delivery.getPickupAddress() != null
                                             ? delivery.getPickupAddress().getAddress() : null)
+                                    .pickupLatitude(delivery.getPickupAddress() != null
+                                            ? delivery.getPickupAddress().getLatitude() : null)
+                                    .pickupLongitude(delivery.getPickupAddress() != null
+                                            ? delivery.getPickupAddress().getLongitude() : null)
                                     .deliveryAddress(delivery.getDeliveryAddress() != null
                                             ? delivery.getDeliveryAddress().getAddress() : null)
+                                    .deliveryLatitude(delivery.getDeliveryAddress() != null
+                                            ? delivery.getDeliveryAddress().getLatitude() : null)
+                                    .deliveryLongitude(delivery.getDeliveryAddress() != null
+                                            ? delivery.getDeliveryAddress().getLongitude() : null)
                                     .status(delivery.getStatus().name())
                                     .build());
                         }

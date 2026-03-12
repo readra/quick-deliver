@@ -38,7 +38,11 @@ public class RiderResponse {
     public static class CurrentDeliveryInfo {
         private String deliveryId;
         private String pickupAddress;
+        private Double pickupLatitude;
+        private Double pickupLongitude;
         private String deliveryAddress;
+        private Double deliveryLatitude;
+        private Double deliveryLongitude;
         private String status;
     }
 
