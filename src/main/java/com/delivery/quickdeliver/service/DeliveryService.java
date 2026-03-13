@@ -33,6 +33,7 @@ public class DeliveryService {
     private final RiderRepository riderRepository;
     private final RouteOptimizationService routeOptimizationService;
     private final NotificationService notificationService;
+    private final WebSocketService webSocketService;
 
     @Transactional
     public DeliveryResponse createDelivery(DeliveryCreateRequest request) {
@@ -164,10 +165,15 @@ public class DeliveryService {
         }
 
         delivery = deliveryRepository.save(delivery);
-        
+
         // 고객에게 알림
         notificationService.notifyStatusChange(delivery);
-        
+
+        // 관제 센터에 실시간 브로드캐스트
+        String riderId = delivery.getRider() != null ? delivery.getRider().getRiderId() : null;
+        webSocketService.broadcastDeliveryUpdate(
+                delivery.getDeliveryId(), newStatus.name(), riderId);
+
         return DeliveryResponse.from(delivery);
     }
 

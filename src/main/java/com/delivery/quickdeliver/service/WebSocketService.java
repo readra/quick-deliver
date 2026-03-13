@@ -47,14 +47,15 @@ public class WebSocketService {
         log.debug("Broadcast rider {} location: {}, {}", riderId, latitude, longitude);
     }
 
-    public void broadcastDeliveryUpdate(String deliveryId, String status) {
+    public void broadcastDeliveryUpdate(String deliveryId, String status, String riderId) {
         Map<String, Object> update = new HashMap<>();
         update.put("deliveryId", deliveryId);
         update.put("status", status);
+        update.put("riderId", riderId);
         update.put("timestamp", System.currentTimeMillis());
 
         // 관제센터로 브로드캐스트
         messagingTemplate.convertAndSend("/topic/monitoring/deliveries", update);
-        log.debug("Broadcast delivery {} status: {}", deliveryId, status);
+        log.debug("Broadcast delivery {} status: {} (rider: {})", deliveryId, status, riderId);
     }
 }
