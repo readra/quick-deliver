@@ -579,10 +579,10 @@
                         <span class="delivery-status status-${delivery.status.toLowerCase()}">${getStatusText(delivery.status)}</span>
                     </div>
                     <div class="delivery-address">
-                        📍 픽업: ${delivery.pickupAddress || '주소 정보 없음'}
+                        📍 픽업: ${delivery.pickupAddress?.address || delivery.pickupAddress || '주소 정보 없음'}
                     </div>
                     <div class="delivery-address">
-                        📍 배송: ${delivery.deliveryAddress || '주소 정보 없음'}
+                        📍 배송: ${delivery.deliveryAddress?.address || delivery.deliveryAddress || '주소 정보 없음'}
                     </div>
                     <div class="delivery-actions">
                         ${getDeliveryActions(delivery)}
@@ -601,7 +601,10 @@
                         <span class="delivery-status status-${delivery.status.toLowerCase()}">${getStatusText(delivery.status)}</span>
                     </div>
                     <div class="delivery-address">
-                        📍 ${delivery.status === 'PICKING_UP' ? '픽업' : '배송'}: ${delivery.status === 'PICKING_UP' ? delivery.pickupAddress : delivery.deliveryAddress}
+                        📍 ${delivery.status === 'PICKING_UP' ? '픽업' : '배송'}:
+                        ${delivery.status === 'PICKING_UP'
+                            ? (delivery.pickupAddress?.address || delivery.pickupAddress || '주소 정보 없음')
+                            : (delivery.deliveryAddress?.address || delivery.deliveryAddress || '주소 정보 없음')}
                     </div>
                     <div class="delivery-actions">
                         ${getDeliveryActions(delivery)}
@@ -625,13 +628,31 @@
         }
 
         // 배송 상태 업데이트
-        async function updateDeliveryStatus(deliveryId, status) {
+        async function updateDeliveryStatus(deliveryId, newStatus) {
+            const statusLabel = { PICKING_UP: '픽업 시작', IN_TRANSIT: '배송 시작', DELIVERED: '배송 완료' };
             try {
-                await apiCall(`/deliveries/${deliveryId}/status`, 'PUT', { status });
+                await apiCall(`/deliveries/${deliveryId}/status`, 'PUT', { status: newStatus });
+
+                // 배송 완료 시 즉시 UI 정리
+                if (newStatus === 'DELIVERED') {
+                    if (riderInfo) riderInfo.status = 'AVAILABLE';
+                    updateRiderStatus('AVAILABLE');
+                    document.getElementById('activeDelivery').innerHTML = `
+                        <div style="text-align:center; padding:20px; color:#10b981;">
+                            <div style="font-size:2em;">✅</div>
+                            <div style="font-weight:700; margin-top:8px;">배송 완료!</div>
+                            <div style="font-size:0.85em; color:#666; margin-top:4px;">수고하셨습니다</div>
+                        </div>`;
+                    setTimeout(() => {
+                        document.getElementById('activeDelivery').innerHTML =
+                            '<div class="empty-state"><p>현재 진행중인 배송이 없습니다</p></div>';
+                    }, 3000);
+                }
+
                 await loadDeliveries();
                 await loadDashboard();
             } catch (error) {
-                alert('배송 상태 업데이트 실패: ' + error.message);
+                alert(`${statusLabel[newStatus] || '상태 변경'} 실패: ` + error.message);
             }
         }
 

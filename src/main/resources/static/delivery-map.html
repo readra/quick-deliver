@@ -787,6 +787,38 @@
             renderRiderList();
         }
 
+        // 배송 상태 변경 실시간 처리
+        function handleDeliveryStatusUpdate(data) {
+            const { riderId, deliveryId, status } = data;
+
+            const isTerminal = status === 'DELIVERED' || status === 'CANCELLED' || status === 'FAILED';
+
+            // ridersData에서 해당 라이더 찾아 currentDelivery 상태 업데이트
+            if (riderId && ridersData.has(riderId)) {
+                const rider = ridersData.get(riderId);
+
+                if (isTerminal) {
+                    // 배송 완료/취소 → currentDelivery 제거, 라이더 상태 AVAILABLE
+                    rider.currentDelivery = null;
+                    rider.status = 'AVAILABLE';
+                    // 선택된 라이더면 핀·선 제거
+                    if (selectedRider === riderId) {
+                        clearDeliveryOverlays();
+                    }
+                    // 마커 아이콘 갱신 (AVAILABLE 라이더 아이콘으로)
+                    updateRiderMarker(rider);
+                } else if (rider.currentDelivery) {
+                    rider.currentDelivery.status = status;
+                }
+
+                ridersData.set(riderId, rider);
+                renderRiderList();
+            } else {
+                // riderId 없거나 아직 로딩 안 된 경우 전체 재조회
+                loadRiders();
+            }
+        }
+
         // 상태 텍스트 변환
         function getStatusText(status) {
             const statusMap = {
@@ -832,7 +864,8 @@
 
                 // 배송 상태 구독
                 stompClient.subscribe('/topic/monitoring/deliveries', function(message) {
-                    loadRiders(); // 배송 상태 변경 시 라이더 정보 갱신
+                    const data = JSON.parse(message.body);
+                    handleDeliveryStatusUpdate(data);
                 });
 
             }, function(error) {
@@ -1543,6 +1576,38 @@
             renderRiderList();
         }
 
+        // 배송 상태 변경 실시간 처리
+        function handleDeliveryStatusUpdate(data) {
+            const { riderId, deliveryId, status } = data;
+
+            const isTerminal = status === 'DELIVERED' || status === 'CANCELLED' || status === 'FAILED';
+
+            // ridersData에서 해당 라이더 찾아 currentDelivery 상태 업데이트
+            if (riderId && ridersData.has(riderId)) {
+                const rider = ridersData.get(riderId);
+
+                if (isTerminal) {
+                    // 배송 완료/취소 → currentDelivery 제거, 라이더 상태 AVAILABLE
+                    rider.currentDelivery = null;
+                    rider.status = 'AVAILABLE';
+                    // 선택된 라이더면 핀·선 제거
+                    if (selectedRider === riderId) {
+                        clearDeliveryOverlays();
+                    }
+                    // 마커 아이콘 갱신 (AVAILABLE 라이더 아이콘으로)
+                    updateRiderMarker(rider);
+                } else if (rider.currentDelivery) {
+                    rider.currentDelivery.status = status;
+                }
+
+                ridersData.set(riderId, rider);
+                renderRiderList();
+            } else {
+                // riderId 없거나 아직 로딩 안 된 경우 전체 재조회
+                loadRiders();
+            }
+        }
+
         // 상태 텍스트 변환
         function getStatusText(status) {
             const statusMap = {
@@ -1586,7 +1651,8 @@
 
                 // 배송 상태 구독
                 stompClient.subscribe('/topic/monitoring/deliveries', function(message) {
-                    loadRiders(); // 배송 상태 변경 시 라이더 정보 갱신
+                    const data = JSON.parse(message.body);
+                    handleDeliveryStatusUpdate(data);
                 });
 
             }, function(error) {
