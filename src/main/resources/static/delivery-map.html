@@ -382,6 +382,14 @@
                     <span style="font-size: 1.3em; color:#ef4444;">🏠</span>
                     <span>배달지</span>
                 </div>
+                <div class="legend-item">
+                    <span style="display:inline-block;width:28px;height:4px;background:#3b82f6;border-radius:2px;opacity:0.65;vertical-align:middle;"></span>
+                    <span>지나온 경로</span>
+                </div>
+                <div class="legend-item">
+                    <span style="display:inline-block;width:28px;height:3px;background:#667eea;border-radius:2px;opacity:0.7;border-top:2px dashed #667eea;vertical-align:middle;"></span>
+                    <span>예정 경로</span>
+                </div>
             </div>
         </div>
 
@@ -409,9 +417,11 @@
         let map = null;
         let stompClient = null;
         let ridersData = new Map();
-        let markers = new Map();       // 라이더별 마커
-        let deliveryOverlays = [];     // 현재 표시 중인 픽업지/배달지 핀
-        let deliveryPolyline = null;   // 현재 표시 중인 경로 선
+        let markers = new Map();               // 라이더별 마커
+        let deliveryOverlays = [];             // 현재 표시 중인 픽업지/배달지 핀
+        let deliveryPolyline = null;           // 현재 표시 중인 경로 계획 선 (점선)
+        let riderPathHistory = new Map();      // 라이더별 실제 이동 경로 이력 (LatLng 배열)
+        let selectedRiderPathPolyline = null;  // 선택된 라이더의 지나온 경로 Polyline
         let currentFilter = 'all';
         let selectedRider = null;
 
@@ -642,6 +652,65 @@
             `).join('');
         }
 
+        // ── 지나온 경로 관련 함수 ─────────────────────────────────────────
+
+        // 라이더 이동 이력에 좌표 추가 → 선택된 라이더면 Polyline 실시간 갱신
+        function addPathPoint(riderId, latitude, longitude) {
+            if (!latitude || !longitude) return;
+
+            if (!riderPathHistory.has(riderId)) {
+                riderPathHistory.set(riderId, []);
+            }
+
+            const history = riderPathHistory.get(riderId);
+            const newPoint = new kakao.maps.LatLng(latitude, longitude);
+
+            // 직전 좌표와 동일하면 중복 추가 방지
+            if (history.length > 0) {
+                const last = history[history.length - 1];
+                if (last.getLat() === latitude && last.getLng() === longitude) return;
+            }
+
+            history.push(newPoint);
+
+            // 현재 선택된 라이더면 Polyline 즉시 업데이트
+            if (selectedRider === riderId) {
+                updateSelectedRiderPath(riderId);
+            }
+        }
+
+        // 선택된 라이더의 지나온 경로 Polyline 그리기/갱신
+        function updateSelectedRiderPath(riderId) {
+            // 기존 경로선 제거
+            if (selectedRiderPathPolyline) {
+                selectedRiderPathPolyline.setMap(null);
+                selectedRiderPathPolyline = null;
+            }
+
+            const history = riderPathHistory.get(riderId);
+            if (!history || history.length < 2) return;
+
+            selectedRiderPathPolyline = new kakao.maps.Polyline({
+                path: history,
+                strokeWeight: 4,
+                strokeColor: '#3b82f6',
+                strokeOpacity: 0.65,
+                strokeStyle: 'solid'
+            });
+            selectedRiderPathPolyline.setMap(map);
+        }
+
+        // 라이더 경로 이력 초기화 (배송 완료·취소·오프라인 시 호출)
+        function clearRiderPath(riderId) {
+            riderPathHistory.delete(riderId);
+            if (selectedRider === riderId && selectedRiderPathPolyline) {
+                selectedRiderPathPolyline.setMap(null);
+                selectedRiderPathPolyline = null;
+            }
+        }
+
+        // ─────────────────────────────────────────────────────────────────
+
         // 기존 픽업지/배달지 핀 및 경로 선 제거
         function clearDeliveryOverlays() {
             deliveryOverlays.forEach(overlay => overlay.setMap(null));
@@ -726,6 +795,12 @@
 
         // 라이더 선택
         function selectRider(riderId) {
+            // 이전에 선택된 라이더의 경로 Polyline 숨기기
+            if (selectedRider && selectedRider !== riderId && selectedRiderPathPolyline) {
+                selectedRiderPathPolyline.setMap(null);
+                selectedRiderPathPolyline = null;
+            }
+
             selectedRider = riderId;
             const rider = ridersData.get(riderId);
 
@@ -733,6 +808,9 @@
 
             // 배달 경로 핀 + 선 표시 (배달 중인 경우)
             showDeliveryRoute(rider);
+
+            // 지나온 경로 표시 (이력이 있을 때)
+            updateSelectedRiderPath(riderId);
 
             // 배달 중이 아닌 경우에만 중심 이동 (배달 중은 setBounds가 처리)
             if (!rider.currentDelivery) {
@@ -807,6 +885,8 @@
                     }
                     // 마커 아이콘 갱신 (AVAILABLE 라이더 아이콘으로)
                     updateRiderMarker(rider);
+                    // 배송 완료/취소 시 지나온 경로 이력 초기화
+                    clearRiderPath(riderId);
                 } else if (rider.currentDelivery) {
                     rider.currentDelivery.status = status;
                 }
@@ -854,11 +934,19 @@
                     if (rider) {
                         rider.latitude = data.latitude;
                         rider.longitude = data.longitude;
+                        if (data.status) rider.status = data.status;
                         ridersData.set(data.riderId, rider);
 
                         // 마커 업데이트
                         updateRiderMarker(rider);
                         renderRiderList();
+
+                        // 오프라인 전환 시 경로 이력 초기화, 그 외엔 이력에 추가
+                        if (data.status === 'OFFLINE') {
+                            clearRiderPath(data.riderId);
+                        } else {
+                            addPathPoint(data.riderId, data.latitude, data.longitude);
+                        }
                     }
                 });
 
@@ -1596,6 +1684,8 @@
                     }
                     // 마커 아이콘 갱신 (AVAILABLE 라이더 아이콘으로)
                     updateRiderMarker(rider);
+                    // 배송 완료/취소 시 지나온 경로 이력 초기화
+                    clearRiderPath(riderId);
                 } else if (rider.currentDelivery) {
                     rider.currentDelivery.status = status;
                 }
