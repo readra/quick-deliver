@@ -1,11 +1,14 @@
 package com.delivery.quickdeliver.controller;
 
 import com.delivery.quickdeliver.domain.entity.Rider;
+import com.delivery.quickdeliver.domain.enums.RiderStatus;
 import com.delivery.quickdeliver.repository.RiderRepository;
+import com.delivery.quickdeliver.service.GeofencingService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
+import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
@@ -22,6 +25,7 @@ public class WebSocketController {
 
     private final SimpMessagingTemplate messagingTemplate;
     private final RiderRepository riderRepository;
+    private final GeofencingService geofencingService;
 
     /**
      * 라이더 위치 업데이트 수신 → DB 저장 + 관제 브로드캐스트
@@ -69,6 +73,11 @@ public class WebSocketController {
         messagingTemplate.convertAndSend("/topic/monitoring/riders", broadcast);
 
         log.debug("위치 업데이트 처리 완료: {} ({}, {})", riderId, latitude, longitude);
+
+        // 지오펜싱 체크: BUSY 라이더만 자동 상태 전환 대상
+        if (rider.getStatus() == RiderStatus.BUSY) {
+            geofencingService.checkAndAutoTransition(riderId, latitude, longitude);
+        }
     }
 
     /**
