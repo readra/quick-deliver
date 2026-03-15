@@ -390,6 +390,10 @@
                     <span style="display:inline-block;width:28px;height:3px;background:#667eea;border-radius:2px;opacity:0.7;border-top:2px dashed #667eea;vertical-align:middle;"></span>
                     <span>예정 경로</span>
                 </div>
+                <div class="legend-item">
+                    <span style="display:inline-block;width:20px;height:20px;border-radius:50%;border:2px dashed #3b82f6;opacity:0.7;vertical-align:middle;"></span>
+                    <span>지오펜스 (100m)</span>
+                </div>
             </div>
         </div>
 
@@ -772,6 +776,40 @@
                 deliveryOverlays.push(dropoffOverlay);
                 pathPoints.push(dropoffPos);
             }
+
+            // 지오펜싱 반경 원형 (100m) ─────────────────────────────────
+            // 픽업지 반경 원 (파란색)
+            if (cd.pickupLatitude && cd.pickupLongitude) {
+                const pickupCircle = new kakao.maps.Circle({
+                    center: new kakao.maps.LatLng(cd.pickupLatitude, cd.pickupLongitude),
+                    radius: 100,
+                    strokeWeight: 2,
+                    strokeColor: '#3b82f6',
+                    strokeOpacity: 0.7,
+                    strokeStyle: 'dashed',
+                    fillColor: '#3b82f6',
+                    fillOpacity: 0.05
+                });
+                pickupCircle.setMap(map);
+                deliveryOverlays.push(pickupCircle);
+            }
+
+            // 배달지 반경 원 (빨간색)
+            if (cd.deliveryLatitude && cd.deliveryLongitude) {
+                const dropoffCircle = new kakao.maps.Circle({
+                    center: new kakao.maps.LatLng(cd.deliveryLatitude, cd.deliveryLongitude),
+                    radius: 100,
+                    strokeWeight: 2,
+                    strokeColor: '#ef4444',
+                    strokeOpacity: 0.7,
+                    strokeStyle: 'dashed',
+                    fillColor: '#ef4444',
+                    fillOpacity: 0.05
+                });
+                dropoffCircle.setMap(map);
+                deliveryOverlays.push(dropoffCircle);
+            }
+            // ──────────────────────────────────────────────────────────────
 
             // 경로 점선 (라이더 → 픽업지 → 배달지)
             if (pathPoints.length >= 2) {
