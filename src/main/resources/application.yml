@@ -44,10 +44,12 @@ jwt:
   secret: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970 #FIXME
   expiration: 86400000 # 24 hours
 
-# Kakao Map API
+# Kakao API
 kakao:
   map:
-    api-key: ${KAKAO_MAP_API_KEY:YOUR_KAKAO_API_KEY} # 환경변수 또는 기본값
+    api-key: ${KAKAO_MAP_API_KEY:YOUR_KAKAO_JS_API_KEY}      # JS 지도 키 (프론트엔드)
+  mobility:
+    api-key: ${KAKAO_REST_API_KEY:}                           # REST 키 (길찾기 API, 미설정 시 fallback)
   
 logging:
   level:
