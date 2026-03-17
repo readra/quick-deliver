@@ -14,6 +14,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.security.Principal;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
@@ -34,7 +35,7 @@ public class WebSocketController {
      */
     @MessageMapping("/rider/location")
     @Transactional
-    public void handleRiderLocation(@Payload Map<String, Object> payload) {
+    public void handleRiderLocation(@Payload Map<String, Object> payload, Principal principal) {
         String riderId = (String) payload.get("riderId");
         if (riderId == null) {
             log.warn("위치 업데이트 수신: riderId 없음");
@@ -52,6 +53,13 @@ public class WebSocketController {
         Rider rider = riderRepository.findByRiderId(riderId).orElse(null);
         if (rider == null) {
             log.warn("위치 업데이트 수신: 존재하지 않는 라이더 riderId={}", riderId);
+            return;
+        }
+
+        // JWT Principal과 라이더 이메일(username) 일치 검증 — 타인 위치 위조 방지
+        if (principal != null && !principal.getName().equals(rider.getEmail())) {
+            log.warn("[WS Auth] riderId 위조 시도: principal={}, rider.email={}",
+                    principal.getName(), rider.getEmail());
             return;
         }
 
