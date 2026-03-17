@@ -749,10 +749,18 @@
 
         // WebSocket 연결
         function connectWebSocket() {
+            const auth = checkAuth();
+            if (!auth) return;
+
             const socket = new SockJS(WS_URL);
             stompClient = Stomp.over(socket);
-            
-            stompClient.connect({}, function(frame) {
+
+            // STOMP CONNECT 헤더에 JWT 포함 (백엔드 WebSocketAuthInterceptor에서 검증)
+            const connectHeaders = {
+                'Authorization': `Bearer ${auth.token}`
+            };
+
+            stompClient.connect(connectHeaders, function(frame) {
                 console.log('WebSocket 연결됨:', frame);
                 updateConnectionStatus(true);
 
