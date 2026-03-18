@@ -13,14 +13,13 @@ import com.delivery.quickdeliver.repository.DeliveryRepository;
 import com.delivery.quickdeliver.repository.RiderRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -33,10 +32,8 @@ public class RiderService {
     private final RiderRepository riderRepository;
     private final DeliveryRepository deliveryRepository;
     private final WebSocketService webSocketService;
-
-    @Autowired(required = false)
-    @Nullable
-    private LocationSimulatorService locationSimulatorService;
+    // dev 프로파일에서만 등록되는 빈 — 없을 경우 Optional.empty() 주입
+    private final Optional<LocationSimulatorService> locationSimulatorService;
 
     @Transactional
     public RiderResponse registerRider(RiderRegisterRequest request) {
@@ -117,15 +114,15 @@ public class RiderService {
         riderRepository.save(rider);
         
         // 배송 중으로 변경 시 경로 시뮬레이션 시작 (dev 프로파일에서만 동작)
-        if (locationSimulatorService != null) {
+        locationSimulatorService.ifPresent(sim -> {
             if (status == RiderStatus.BUSY && oldStatus != RiderStatus.BUSY) {
-                locationSimulatorService.startRoute(riderId);
+                sim.startRoute(riderId);
                 log.info("Started location simulation for rider {}", riderId);
             } else if (status != RiderStatus.BUSY && oldStatus == RiderStatus.BUSY) {
-                locationSimulatorService.stopRoute(riderId);
+                sim.stopRoute(riderId);
                 log.info("Stopped location simulation for rider {}", riderId);
             }
-        }
+        });
         
         log.info("Rider {} status updated from {} to {}", riderId, oldStatus, status);
     }
