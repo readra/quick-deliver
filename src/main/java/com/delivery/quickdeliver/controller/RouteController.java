@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 /**
  * 길찾기(경로 조회) REST API
- *
  * GET /api/routes
  *   ?originLat=37.xxx&originLng=127.xxx
  *   &destLat=37.yyy&destLng=127.yyy
