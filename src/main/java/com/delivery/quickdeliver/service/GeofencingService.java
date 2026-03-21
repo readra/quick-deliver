@@ -12,7 +12,6 @@ import java.util.List;
 
 /**
  * 지오펜싱 기반 배송 상태 자동 전환 서비스
- *
  * 라이더가 픽업지/배달지 반경 내에 진입하면 배송 상태를 자동으로 전환한다.
  *   ASSIGNED   + 픽업지  100m 이내 진입 → PICKING_UP 자동 전환
  *   PICKING_UP + 배달지  100m 이내 진입 → IN_TRANSIT  자동 전환
