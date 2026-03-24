@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Profile;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,6 +18,7 @@ import java.util.Map;
 @RequestMapping("/api/simulation")
 @RequiredArgsConstructor
 @Tag(name = "Simulation API", description = "위치 시뮬레이션 관리 API (개발+테스트용)")
+@Profile("dev")
 public class SimulationController {
 
     private final LocationSimulatorService locationSimulatorService;
