@@ -88,6 +88,16 @@
 <body>
     <h1>🚀 Quick Deliver WebSocket Test</h1>
     
+    <!-- 로그인 패널 -->
+    <div id="loginPanel" class="panel" style="max-width: 400px; margin: 20px auto;">
+        <h2>🔐 로그인</h2>
+        <input type="text" id="username" placeholder="아이디" value="admin">
+        <input type="password" id="password" placeholder="비밀번호" value="admin123">
+        <button onclick="login()">로그인</button>
+        <div id="loginError" style="color: #f44336; margin-top: 10px; display: none;"></div>
+    </div>
+
+    <div id="mainContent" style="display: none;">
     <div class="status" id="status">
         <span id="statusText">Disconnected</span>
     </div>
@@ -134,15 +144,50 @@
         <button onclick="clearMessages()">메시지 지우기</button>
         <div id="messages"></div>
     </div>
+    </div><!-- end mainContent -->
 
     <script>
         let stompClient = null;
         let currentRiderId = null;
+        let jwtToken = null;
+
+        // 로그인
+        async function login() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const errorDiv = document.getElementById('loginError');
+
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+
+                if (!response.ok) {
+                    throw new Error('로그인 실패');
+                }
+
+                const data = await response.json();
+                jwtToken = data.data?.token || data.token;
+
+                if (!jwtToken) {
+                    throw new Error('토큰을 받지 못했습니다');
+                }
+
+                document.getElementById('loginPanel').style.display = 'none';
+                document.getElementById('mainContent').style.display = 'block';
+                showMessage('로그인 성공: ' + username, false);
+            } catch (error) {
+                errorDiv.textContent = error.message;
+                errorDiv.style.display = 'block';
+            }
+        }
 
         function setConnected(connected) {
             const status = document.getElementById('status');
             const statusText = document.getElementById('statusText');
-            
+
             if (connected) {
                 status.className = 'status connected';
                 statusText.textContent = 'Connected';
@@ -153,11 +198,20 @@
         }
 
         function connect() {
+            if (!jwtToken) {
+                alert('먼저 로그인하세요!');
+                return;
+            }
+
             currentRiderId = document.getElementById('riderId').value;
             const socket = new SockJS('/ws');
             stompClient = Stomp.over(socket);
 
-            stompClient.connect({}, function (frame) {
+            const connectHeaders = {
+                'Authorization': `Bearer ${jwtToken}`
+            };
+
+            stompClient.connect(connectHeaders, function (frame) {
                 setConnected(true);
                 showMessage('연결 성공: ' + frame, false);
                 
