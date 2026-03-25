@@ -794,10 +794,17 @@
 
         // WebSocket 연결
         function connectWebSocket() {
+            const auth = checkAuth();
+            if (!auth) return;
+
             const socket = new SockJS(WS_URL);
             stompClient = Stomp.over(socket);
-            
-            stompClient.connect({}, function(frame) {
+
+            const connectHeaders = {
+                'Authorization': `Bearer ${auth.token}`
+            };
+
+            stompClient.connect(connectHeaders, function(frame) {
                 console.log('WebSocket 연결됨:', frame);
                 updateConnectionStatus(true);
                 addActivityLog('실시간 모니터링 시작');
