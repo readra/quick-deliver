@@ -6,6 +6,6 @@ import lombok.Data;
 public class Waypoint {
     private Double latitude;
     private Double longitude;
-    private Integer timestamp; // 초 단위
+    private Integer timestamp; // 초
     private String description;
 }
