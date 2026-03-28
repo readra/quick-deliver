@@ -31,7 +31,7 @@ public class WebSocketEventListener {
         StompHeaderAccessor headerAccessor = StompHeaderAccessor.wrap(event.getMessage());
         String sessionId = headerAccessor.getSessionId();
 
-        // Optional을 사용한 Null 안전 처리
+        // Optional을 사용한 null 안전 처리
         Optional.ofNullable(headerAccessor.getSessionAttributes())
                 .map(attrs -> attrs.get("username"))
                 .map(String.class::cast)
