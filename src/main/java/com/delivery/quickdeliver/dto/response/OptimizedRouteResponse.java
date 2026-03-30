@@ -23,7 +23,7 @@ public class OptimizedRouteResponse {
     @Builder
     public static class Waypoint {
         private String deliveryId;
-        private String type; // PICKUP or DELIVERY
+        private String type;
         private Address address;
         private Integer estimatedArrival;
     }
