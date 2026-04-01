@@ -35,8 +35,8 @@ public class RiderPerformance {
     private Integer lateDeliveries;
 
     // 효율성 지표
-    private Double deliveryEfficiencyScore; // 0-100
-    private Double routeOptimizationScore; // 0-100
+    private Double deliveryEfficiencyScore;
+    private Double routeOptimizationScore;
 
     // 수익
     private Integer totalEarnings;
