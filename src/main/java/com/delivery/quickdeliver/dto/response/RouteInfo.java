@@ -18,7 +18,7 @@ public class RouteInfo {
     /** 경로 좌표 배열 [[lat, lng], ...] — Kakao Maps LatLng 순서 */
     private List<double[]> path;
 
-    /** 예상 소요 시간 (초) */
+    /** 예상 소요 시간 */
     private int durationSeconds;
 
     /** 총 거리 (미터) */
