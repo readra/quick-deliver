@@ -21,7 +21,7 @@ public class RouteInfo {
     /** 예상 소요 시간 */
     private int durationSeconds;
 
-    /** 총 거리 (미터) */
+    /** 총 거리 */
     private int distanceMeters;
 
     /** 포맷된 ETA 문자열 (예: "약 23분", "약 1시간 5분") */
