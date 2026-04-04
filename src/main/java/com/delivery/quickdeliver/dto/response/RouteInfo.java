@@ -24,6 +24,6 @@ public class RouteInfo {
     /** 총 거리 */
     private int distanceMeters;
 
-    /** 포맷된 ETA 문자열 (예: 약 23분, "약 1시간 5분") */
+    /** 포맷된 ETA 문자열 (예: 약 23분, 약 1시간 5분) */
     private String etaFormatted;
 }
