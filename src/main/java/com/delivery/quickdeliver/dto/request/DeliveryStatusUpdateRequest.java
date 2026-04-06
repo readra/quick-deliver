@@ -16,5 +16,5 @@ public class DeliveryStatusUpdateRequest {
 
     private Double latitude;
     private Double longitude;
-    private String reason; // 취소 사유 등
+    private String reason;
 }
