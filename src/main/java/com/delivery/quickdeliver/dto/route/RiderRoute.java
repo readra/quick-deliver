@@ -39,7 +39,7 @@ public class RiderRoute {
         
         long elapsedSeconds = (System.currentTimeMillis() - startTime) / 1000;
         
-        // 경과 시간에 맞는 경로 찾기
+        // 경과 시간에 맞는 waypoint 찾기
         for (int i = 0; i < waypoints.size(); i++) {
             if (waypoints.get(i).getTimestamp() <= elapsedSeconds) {
                 currentWaypointIndex = i;
