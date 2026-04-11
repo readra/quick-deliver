@@ -542,7 +542,7 @@ http://localhost:8080/swagger-ui.html
 
 ## 👨‍💻 개발자 정보
 
-**개발자**: jykim  
+**개발자**: readra  
 **이메일**: yong9976@naver.com  
 **개발 기간**: 2025.11  
 **프로젝트 상태**: Phase 3 완료 (Security & WebSocket)
