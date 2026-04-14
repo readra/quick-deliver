@@ -57,7 +57,7 @@ public class WebSocketAuthInterceptor implements ChannelInterceptor {
 
             String username = jwtTokenProvider.getUsernameFromToken(token);
 
-            // 인증 정보를 세션에 등록 이후 @MessageMapping에서 Principal로 접근 가능
+            // 인증 정보를 세션에 등록 및 이후 @MessageMapping에서 Principal로 접근 가능
             accessor.setUser(new UsernamePasswordAuthenticationToken(
                     username, null, Collections.emptyList()));
 
