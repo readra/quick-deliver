@@ -176,7 +176,6 @@ public class AnalyticsService {
                 .build();
     }
 
-    // Helper methods
     private long countByStatus(List<Delivery> deliveries, DeliveryStatus status) {
         return deliveries.stream()
                 .filter(d -> d.getStatus() == status)
