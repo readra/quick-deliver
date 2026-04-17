@@ -125,7 +125,8 @@ public class AnalyticsService {
 
         // 다음 시간 예측
         int currentHour = now.getHour();
-        long predictedNextHour = hourlyPattern.getOrDefault(currentHour + 1, 0L) / 28; // 4주 평균
+		// 4주 평균
+        long predictedNextHour = hourlyPattern.getOrDefault(currentHour + 1, 0L) / 28;
 
         return AnalyticsResponse.PredictiveAnalytics.builder()
                 .predictedDeliveriesNextHour(predictedNextHour)
