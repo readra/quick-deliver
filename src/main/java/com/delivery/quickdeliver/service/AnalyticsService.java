@@ -325,7 +325,7 @@ public class AnalyticsService {
         }
         
         actions.add("실시간 모니터링을 통한 동적 라이더 배치");
-        actions.add("AI 기반 수요 예측 시스템 활용");
+        actions.add("수요 예측 시스템 활용");
         
         return actions;
     }
