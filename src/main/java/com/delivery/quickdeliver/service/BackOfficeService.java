@@ -93,7 +93,7 @@ public class BackOfficeService {
         List<Delivery> delayedDeliveries = deliveryRepository.findDelayedDeliveries(now);
         dashboard.put("delayedDeliveries", delayedDeliveries.size());
         
-        // 시간대별 배송 건수 (오늘)
+        // 오늘의 시간대별 배송 건수
         Map<Integer, Long> hourlyDistribution = todayDeliveries.stream()
                 .collect(Collectors.groupingBy(
                         d -> d.getRequestedTime().getHour(),
