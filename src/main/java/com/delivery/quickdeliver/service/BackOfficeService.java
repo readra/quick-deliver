@@ -165,8 +165,7 @@ public class BackOfficeService {
         Rider rider = riderRepository.findByRiderId(riderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Rider not found"));
         
-        // 실제로는 isActive 같은 필드가 있어야 하지만, 
-        // 현재는 status를 OFFLINE으로 변경
+        // 실제로는 isActive 같은 필드가 있어야 하지만, 현재는 status를 OFFLINE으로 변경
         rider.setStatus(RiderStatus.OFFLINE);
         riderRepository.save(rider);
         
