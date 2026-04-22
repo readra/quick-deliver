@@ -515,7 +515,7 @@ public class BackOfficeService {
             alerts.add(alert);
         }
         
-        // 오프라인 라이더 알림 (근무 시간 중인데 오프라인)
+        // 오프라인 라이더 알림 (근무 시간에 오프라인)
         List<Rider> activeRiders = riderRepository.findActiveRiders();
         List<Rider> offlineButShifted = activeRiders.stream()
                 .filter(r -> r.getStatus() == RiderStatus.OFFLINE && 
