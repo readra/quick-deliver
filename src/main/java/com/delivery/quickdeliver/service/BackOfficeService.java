@@ -626,7 +626,7 @@ public class BackOfficeService {
      */
     public Map<String, Object> getOperatingHours() {
         Map<String, Object> hours = new HashMap<>();
-        // 실제로는 DB나 설정 파일에서 읽기
+        // TODO: DB나 설정 파일에서 읽기
         hours.put("weekday", Map.of("open", "09:00", "close", "22:00"));
         hours.put("weekend", Map.of("open", "10:00", "close", "21:00"));
         return hours;
