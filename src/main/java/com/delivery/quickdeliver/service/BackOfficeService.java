@@ -637,7 +637,7 @@ public class BackOfficeService {
      */
     @Transactional
     public void updateOperatingHours(Map<String, Object> operatingHours) {
-        // 실제로는 DB나 설정 파일에 저장
+        // TODO: DB나 설정 파일에 저장
         log.info("Operating hours updated: {}", operatingHours);
     }
 
