@@ -169,7 +169,7 @@ public class DeliveryService {
         // 고객에게 알림
         notificationService.notifyStatusChange(delivery);
 
-        // 관제 센터에 실시간 브로드캐스트
+        // 관제 센터에 브로드캐스트
         String riderId = delivery.getRider() != null ? delivery.getRider().getRiderId() : null;
         webSocketService.broadcastDeliveryUpdate(
                 delivery.getDeliveryId(), newStatus.name(), riderId);
