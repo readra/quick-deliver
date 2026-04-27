@@ -228,7 +228,7 @@ public class DeliveryService {
     }
 
     private double calculateDistance(double lat1, double lon1, double lat2, double lon2) {
-        // Haversine formula for distance calculation
+        // 하버사인 공식 Haversine formula for distance calculation
         double R = 6371; // Earth's radius in km
         double dLat = Math.toRadians(lat2 - lat1);
         double dLon = Math.toRadians(lon2 - lon1);
