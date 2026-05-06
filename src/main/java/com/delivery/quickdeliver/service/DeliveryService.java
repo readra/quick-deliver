@@ -229,7 +229,7 @@ public class DeliveryService {
 
     private double calculateDistance(double lat1, double lon1, double lat2, double lon2) {
         // 하버사인 공식으로 거리 계산
-        double R = 6371; // 지구 반지름
+        double R = 6371; // 지구 반지름(km)
         double dLat = Math.toRadians(lat2 - lat1);
         double dLon = Math.toRadians(lon2 - lon1);
         double a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
