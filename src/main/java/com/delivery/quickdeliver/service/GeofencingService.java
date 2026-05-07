@@ -77,8 +77,6 @@ public class GeofencingService {
         }
     }
 
-    // ── 내부 헬퍼 ─────────────────────────────────────────────────────────
-
     private void autoTransition(String deliveryId, DeliveryStatus newStatus,
                                 double latitude, double longitude) {
         DeliveryStatusUpdateRequest req = new DeliveryStatusUpdateRequest();
