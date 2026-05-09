@@ -38,8 +38,6 @@ public class KakaoRouteService {
 
     private final RestTemplate restTemplate = new RestTemplate();
 
-    // ── Kakao Mobility API 응답 DTO ───────────────────────────────────────
-
     @Getter
     @NoArgsConstructor
     @JsonIgnoreProperties(ignoreUnknown = true)
