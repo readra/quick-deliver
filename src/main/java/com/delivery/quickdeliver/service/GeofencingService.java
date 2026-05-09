@@ -93,7 +93,7 @@ public class GeofencingService {
     }
 
     /**
-     * Haversine 공식으로 두 좌표 간 거리(미터)를 계산한다.
+     * 하버사인 공식으로 두 좌표 간 거리(미터)를 계산한다.
      */
     public static double distanceMeters(double lat1, double lon1, double lat2, double lon2) {
         final double R = 6_371_000; // 지구 반지름 (m)
