@@ -78,8 +78,6 @@ public class KakaoRouteService {
         private List<Double> vertexes;
     }
 
-    // ─────────────────────────────────────────────────────────────────────
-
     /**
      * 출발지 → (경유지) → 목적지 경로를 조회한다.
      *
