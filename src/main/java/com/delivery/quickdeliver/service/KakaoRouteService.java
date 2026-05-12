@@ -128,8 +128,6 @@ public class KakaoRouteService {
         }
     }
 
-    // ── 내부 파싱 헬퍼 ────────────────────────────────────────────────────
-
     private RouteInfo parseResponse(ApiResponse body) {
         if (body == null || body.getRoutes() == null || body.getRoutes().isEmpty()) {
             return unavailable();
