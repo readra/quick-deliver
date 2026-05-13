@@ -85,7 +85,7 @@ public class KakaoRouteService {
      * @param originLng   출발지 경도
      * @param destLat     목적지 위도
      * @param destLng     목적지 경도
-     * @param waypointLat 경유지 위도 (null 가능)
+     * @param waypointLat 경유지 위도 (nullable)
      * @param waypointLng 경유지 경도 (null 가능)
      * @return 경로 정보 (available=false 이면 API 미설정 또는 실패)
      */
