@@ -12,7 +12,7 @@ import java.util.List;
 @Builder
 public class RouteInfo {
 
-    /** API 호출 성공 여부 (false 면 프론트엔드는 fallback 직선 경로를 사용) */
+    /** API 호출 성공 여부 (false 면 fallback 직선 경로를 사용) */
     private boolean available;
 
     /** 경로 좌표 배열 [[lat, lng], ...] — Kakao Maps LatLng 순서 */
