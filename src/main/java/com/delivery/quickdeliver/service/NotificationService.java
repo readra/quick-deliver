@@ -23,7 +23,7 @@ public class NotificationService {
         // WebSocket으로 실시간 알림
         webSocketService.sendToRider(rider.getRiderId(), "DELIVERY_ASSIGNED", message);
         
-        // TODO: FCM Push 알림 추가
+        // TODO: Push 알림 추가
         log.info("Notified rider {} about new delivery {}", 
                 rider.getRiderId(), delivery.getDeliveryId());
     }
