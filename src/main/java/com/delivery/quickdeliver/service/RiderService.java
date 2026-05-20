@@ -32,7 +32,7 @@ public class RiderService {
     private final RiderRepository riderRepository;
     private final DeliveryRepository deliveryRepository;
     private final WebSocketService webSocketService;
-    // Optional.empty() 주입 (dev 프로파일에서만 동작)
+    // dev 프로파일에서만 동작
     private final Optional<LocationSimulatorService> locationSimulatorService;
 
     @Transactional
