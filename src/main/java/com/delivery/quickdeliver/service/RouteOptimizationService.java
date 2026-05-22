@@ -92,7 +92,7 @@ public class RouteOptimizationService {
     }
 
     /**
-     * 두 지점 간 거리 계산 (하버사인 공식 Haversine Formula)
+     * 두 지점 간 거리 계산 (하버사인 공식)
      */
     public double calculateDistance(Address from, Address to) {
         if (from == null || to == null || 
