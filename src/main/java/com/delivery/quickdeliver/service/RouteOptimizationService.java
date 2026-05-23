@@ -165,7 +165,7 @@ public class RouteOptimizationService {
     }
 
     private double calculateOptimizationScore(double totalDistance, int deliveryCount) {
-        // 최적화 점수 계산 (0-100)
+        // 최적화 점수 계산
         double avgDistancePerDelivery = totalDistance / deliveryCount;
         if (avgDistancePerDelivery < 2) return 100;
         if (avgDistancePerDelivery < 5) return 80;
