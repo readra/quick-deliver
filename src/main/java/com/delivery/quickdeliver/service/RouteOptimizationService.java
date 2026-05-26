@@ -174,7 +174,7 @@ public class RouteOptimizationService {
     }
 
     private String getZone(Address address) {
-        // 주소를 구역으로 변환 TODO: 실제로는 행정구역 API 사용
+        // TODO: 실제로는 행정구역 API 사용
         if (address == null || address.getAddress() == null) return "Unknown";
         String[] parts = address.getAddress().split(" ");
         return parts.length > 1 ? parts[1] : "Zone1";
