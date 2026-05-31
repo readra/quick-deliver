@@ -160,7 +160,7 @@ public class RouteOptimizationService {
     }
 
     private int calculateTotalTime(double totalDistance) {
-        // 거리 + 각 지점에서의 처리 시간 (5분)
+        // 거리 + 각 지점에서의 처리 시간
         return calculateEstimatedTime(totalDistance) + 10;
     }
 
