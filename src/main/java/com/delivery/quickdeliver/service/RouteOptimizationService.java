@@ -155,7 +155,7 @@ public class RouteOptimizationService {
     }
 
     private int calculateEstimatedTime(double distance) {
-        // FIXME: 평균 30km/h 하드코딩 제거
+        // FIXME: 30km/h 하드코딩 제거
         return (int) (distance / 30 * 60); // 분 단위
     }
 
